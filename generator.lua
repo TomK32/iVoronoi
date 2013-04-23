@@ -2,11 +2,11 @@ gen = { }
 gen.regions = { }
 
 framesize = { x=400, y=400 }
-pointcount = 6
+pointcount = 11
 
 function gen:initalize()
 	-- fixed for testing, remove the seed when testing is finished
-	math.randomseed(123)
+	math.randomseed(1234)
 
 	gen.regions = voronoi:create(pointcount,1,300,100,framesize.x,framesize.y)
 

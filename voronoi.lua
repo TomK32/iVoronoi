@@ -29,6 +29,7 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 		returner[it].events = Heap:new()
 		returner[it].beachline = DoubleLinkedList:new()
 		returner[it].polygons = { }
+		returner[it].polylink = { }
 
 		---------------------------------------------------------
 		-- creates the random points that the polygons will be based
@@ -52,7 +53,7 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 		
 		-- sets up the returner events
 		for i = 1,#returner[it].points do
-			returner[it].events:push(returner[it].points[i], returner[it].points[i].x)
+			returner[it].events:push(returner[it].points[i], returner[it].points[i].x,{i} )
 		end
 		
 		while not returner[it].events:isEmpty() do
@@ -65,11 +66,114 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 		end
 		
 		self:finishEdges(returner[it])	 
-    end
 
+		self:dirty_poly(returner[it])
+
+
+
+    end
     -----------------------------
     -- returns the last iteration
     return returner[iterations]
+end
+
+
+-----------------------------------------------------------------------------------------------------------------------------
+-- i get lost in the arc tables. this is a way to make polygons. it might not be as fast as
+-- doing it during the sweeps, but its the fastest way i can implement one and might not be too bad on the performance side.
+function voronoi:dirty_poly(invoronoi)
+
+	local polygon = { }
+
+	-- removes the points that are outside the boundary
+	local processingpoints = invoronoi.vertex
+	--[[for i=#processingpoints,1,-1 do
+		-- checks the boundaries, and then removes it
+		if (processingpoints[i].x < invoronoi.boundary[1]) or (processingpoints[i].x > invoronoi.boundary[3]) or (processingpoints[i].y < invoronoi.boundary[2]) or (processingpoints[i].y > invoronoi.boundary[4]) then
+			-- removes the item
+			for remove=#processingpoints-1,i,-1 do processingpoints[remove] = processingpoints[remove+1] end
+			processingpoints[#processingpoints] = nil
+		end
+	end]]--
+
+	-- adds other points that are not in the vertexes, like the corners and intersections with the boundary
+	local otherpoints = {
+		{ x = invoronoi.boundary[1], y = invoronoi.boundary[2] },
+		{ x = invoronoi.boundary[1], y = invoronoi.boundary[4] },
+		{ x = invoronoi.boundary[3], y = invoronoi.boundary[2] },
+		{ x = invoronoi.boundary[3], y = invoronoi.boundary[4] }
+	}
+	for i,v in pairs(invoronoi.segments) do
+		local isects = { }
+
+		-- left boundary
+		if (v.startPoint.x < invoronoi.boundary[1]) or (v.endPoint.x < invoronoi.boundary[1]) then 
+
+			local px,py,onlines = mfunc:intersectionpoint(
+				{ invoronoi.boundary[1],invoronoi.boundary[2],invoronoi.boundary[1],invoronoi.boundary[4] },
+				{ v.startPoint.x, v.startPoint.y, v.endPoint.x, v.endPoint.y }
+			) 
+			isects[#isects+1] = { x=px,y=py,on=onlines }
+		end
+		-- right boundary
+		if (v.startPoint.x > invoronoi.boundary[3]) or (v.endPoint.x > invoronoi.boundary[3]) then 
+			local px,py,onlines = mfunc:intersectionpoint(
+				{ invoronoi.boundary[3],invoronoi.boundary[2],invoronoi.boundary[3],invoronoi.boundary[4] },
+				{ v.startPoint.x, v.startPoint.y, v.endPoint.x, v.endPoint.y }
+			)
+			isects[#isects+1] = { x=px,y=py,on=onlines }
+		end
+		--top boundary
+		if (v.startPoint.y < invoronoi.boundary[2]) or (v.endPoint.y < invoronoi.boundary[2]) then 
+			local px,py,onlines = mfunc:intersectionpoint(
+				{ invoronoi.boundary[1],invoronoi.boundary[2],invoronoi.boundary[3],invoronoi.boundary[2] },
+				{ v.startPoint.x, v.startPoint.y, v.endPoint.x, v.endPoint.y }
+
+			)
+			isects[#isects+1] = { x=px,y=py,on=onlines }
+		end
+		-- bottom boundary
+		if (v.startPoint.y > invoronoi.boundary[4]) or (v.endPoint.y > invoronoi.boundary[4]) then 
+			local px,py,onlines = mfunc:intersectionpoint(
+				{ invoronoi.boundary[1],invoronoi.boundary[4],invoronoi.boundary[3],invoronoi.boundary[4] },
+				{ v.startPoint.x, v.startPoint.y, v.endPoint.x, v.endPoint.y }
+			)
+			isects[#isects+1] = { x=px,y=py,on=onlines }	 
+		end
+
+		-- checks if the point is in or on the boundary lines
+		for index,ise in pairs(isects) do if ise.on then otherpoints[#otherpoints+1] = { x = ise.x, y = ise.y }  end end
+	end
+	for i,v in pairs(otherpoints) do table.insert(processingpoints,v) end
+
+
+	for vindex,point in pairs(processingpoints) do
+		local distances = { }
+		---------------------------------------------------------------
+		-- calculates the distances and sorts if from lowest to highest
+		for rindex,ranpoint in pairs(invoronoi.points) do
+			distances[#distances+1] = { i = rindex, d = (math.sqrt(math.pow(point.x-ranpoint.x,2)+math.pow(point.y-ranpoint.y,2))) }
+		end
+		distances = mfunc:sorttable(distances,'d',true)
+
+		local mindistance = distances[1].d
+		local i = 1
+		while (distances[i].d - mindistance < constants.zero) do
+			print(distances[i].i)
+			if polygon[distances[i].i] == nil then
+				polygon[distances[i].i] = { }
+				polygon[distances[i].i][1] = { x = point.x, y = point.y }
+			else
+				polygon[distances[i].i][#polygon[distances[i].i]+1] = { x = point.x, y = point.y }
+			end
+			i = i + 1
+		end
+	end
+
+	for i=1,#invoronoi.points do 
+		print(i,polygon[i])
+		invoronoi.polygons[i] = mfunc:sortpolydraworder(polygon[i])
+	end
 end
 
 --------------------------------------------------------------------------------------------------------------------
@@ -83,15 +187,34 @@ function voronoi:draw(ivoronoi)
 
 	-- draw the points
 	love.graphics.setColor(255,255,255)
-	love.graphics.setPointSize(5)
+	love.graphics.setPointSize(7)
 	for index,point in pairs(ivoronoi.points) do
 		love.graphics.point(point.x,point.y)
+		love.graphics.print(index,point.x,point.y)
 	end
 
 	-- draws the segments
 	love.graphics.setColor(150,0,100)
 	for index,segment in pairs(ivoronoi.segments) do
 		love.graphics.line(segment.startPoint.x,segment.startPoint.y,segment.endPoint.x,segment.endPoint.y)
+	end
+
+	-- draws the segment's vertices
+	love.graphics.setColor(250,100,200)
+	love.graphics.setPointSize(5)
+	for index,vertex in pairs(ivoronoi.vertex) do
+		love.graphics.point(vertex.x,vertex.y)
+	end
+
+	-- draws the polygons
+	love.graphics.setColor(50,50,255)
+	for index,polygon in pairs(ivoronoi.polygons) do
+		if #polygon >= 6 then
+			love.graphics.setColor(50,50,255)
+			love.graphics.polygon('fill',unpack(polygon))
+			love.graphics.setColor(255,255,255)
+			love.graphics.polygon('line',unpack(polygon))
+		end
 	end
 
 end
@@ -115,6 +238,7 @@ function Heap:push(k, v)
     local parent_pos = (heap_pos - heap_pos % 2) / 2 -- parent position in heap array
 
     self.heap[heap_pos] = k -- insert at a leaf
+
     self.nodes[k] = v
 
     while heap_pos > 1 and self.nodes[self.heap[parent_pos]] > v do -- climb heap?
@@ -123,6 +247,8 @@ function Heap:push(k, v)
         parent_pos = (heap_pos - heap_pos % 2) / 2
     end
 
+    return k
+
 end
  
 function Heap:pop()
@@ -130,14 +256,14 @@ function Heap:pop()
 
     assert(heap_pos > 0, "cannot pop from empty heap")
 
-    local heap_root_pos = self.heap[1]
-    local heap_root = self.nodes[heap_root_pos]
+    local heap_root = self.heap[1]
+    local heap_root_pos = self.nodes[heap_root]
 
     local current_heap = self.nodes[self.heap[heap_pos]]
 
     self.heap[1] = self.heap[heap_pos] -- move leaf to root
     self.heap[heap_pos] = nil -- remove leaf
-    self.nodes[heap_root_pos] = nil
+    self.nodes[heap_root] = nil
     heap_pos = heap_pos - 1
 
     local node_pos = 1 -- node position in heap array
@@ -154,7 +280,7 @@ function Heap:pop()
         parent_pos = 2 * node_pos + 1
     end
 end
-    return heap_root_pos, heap_root
+    return heap_root, heap_root_pos
 end
  
 function Heap:isEmpty() 
@@ -176,7 +302,7 @@ function DoubleLinkedList:new()
 end
  
 function DoubleLinkedList:insertAfter(node, data)
-    local new = {prev = node, next = node.next, x = data.x, y = data.y } -- creates a new node
+    local new = {prev = node, next = node.next, x = data.x, y = data.y} -- creates a new node
     node.next = new -- the node after node is the new node
     if node == self.last then -- check if the old node is the last node...
         self.last = new -- ...and set the new node as last node
@@ -277,7 +403,8 @@ function voronoi:processPoint(point,ivoronoi)
     end
     
     --Find the current arc(s) at height p.y (if there are any).
-    for arc in ivoronoi.beachline.nextNode, ivoronoi.beachline do
+    for arc in ivoronoi.beachline.nextNode, ivoronoi.beachline do 
+    	
         z = (intersect(point,arc))
         if z then
             --New parabola intersects arc i.  If necessary, duplicate i.
@@ -326,7 +453,7 @@ function voronoi:processPoint(point,ivoronoi)
  
     segment = {startPoint = {x = X0, y = (ivoronoi.beachline.last.y + ivoronoi.beachline.last.prev.y) / 2}, endPoint = {x = 0, y = 0}, done = false, type = 3}
     
-    table.insert(segments, segment)
+    table.insert(ivoronoi.segments, segment)
     
     ivoronoi.beachline.last.seg0 = segment
     ivoronoi.beachline.last.prev.seg1 = segment
@@ -379,7 +506,7 @@ function voronoi:check_circle_event(arc, x0, ivoronoi)
     
     if x and x > x0 then
         --Create new event.
-        arc.event = {x = o.x, y = o.y, arc = arc, valid = true, event = true}
+        arc.event = {x = o.x, y = o.y, arc = arc, valid = true, event = true }
         ivoronoi.events:push(arc.event, x)
     end
 end
