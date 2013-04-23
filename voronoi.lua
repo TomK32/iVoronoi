@@ -1,50 +1,41 @@
---[[
-Copyright (c) 2010 David Ng
- 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
- 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
- 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
- 
-Based of the work of Steve J. Fortune (1987) A Sweepline Algorithm for Voronoi Diagrams,
-Algorithmica 2, 153-174, and its translation to C++ by Matt Brubeck, 
-http://www.cs.hmc.edu/~mbrubeck/voronoi.html
---]]
-
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
 voronoi = { }
-
+--------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+-- creates a voronoi diagram and returns a table containing the structure.
+--
+-- polygoncount = the number of polygons wanted, this can be thought of as the total number of grid regions
+-- iterations = how many times you would like to run the  voronoi. the more iterations, the smoother and more regular
+--              the grid looks, recommend at least 3 iterations for a nice grid. any more is diminishing returns
+-- minx,miny,maxx,maxy = the boundary for the voronoi diagram. if you choose 0,0,100,100 the function will make a voronoi diagram inside 
+--                       the square defined by 0,0 and 100,100 where all the points of the voronoi are inside the square.
 function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
-
 	local returner = { }
 
+	----------------------------------------------------------
+	-- the iteration loop
 	for it=1,iterations do
 
+		------------------------------------------------
+		-- initalizes everything needed for this iteration
 		returner[it] = { }
 		returner[it].points = { }
 		returner[it].boundary = { minx,miny,minx+maxx,miny+maxy }
 		returner[it].vertex = { }
 		returner[it].segments = { }
+		returner[it].events = Heap:new()
+		returner[it].beachline = DoubleLinkedList:new()
+		returner[it].polygons = { }
 
-		X0 = returner[it].boundary[1]
-		X1 = returner[it].boundary[3]
-		Y0 = returner[it].boundary[2]
-		Y1 = returner[it].boundary[4]
-		NUMPOINT = polygoncount
-		MIN_DIST = 10
-
+		---------------------------------------------------------
+		-- creates the random points that the polygons will be based
+		-- off of. if this is it > 1 then it uses the centroids of the 
+		-- polygons from the previous iteration as the 'random points'
+		-- this relaxes the voronoi diagram and softens the grids so
+		-- the grid is more even.
 		if it == 1 then 
 			for i=1,polygoncount do
 				returner[it].points[i] = 
@@ -58,142 +49,60 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 		else
 			returner[it].points = returner[it-1].centroids
 		end
-
-		local lastx = X0
-		local lasty = Y1
-
-	
-		beachline = DoubleLinkedList:new()
-		events = Heap:new()
-		vertex = {}
-		segments = {}
 		
-		--Update point positions
+		-- sets up the returner events
 		for i = 1,#returner[it].points do
-			events:push(returner[it].points[i], returner[it].points[i].x)
+			returner[it].events:push(returner[it].points[i], returner[it].points[i].x)
 		end
 		
-		while not events:isEmpty() do
-			e, x = events:pop()
+		while not returner[it].events:isEmpty() do
+			local e, x = returner[it].events:pop()
 			if e.event then
-				processEvent(e)
+				self:processEvent(e,returner[it])
 			else
-				processPoint(e)
+				self:processPoint(e,returner[it])
 			end    
 		end
 		
-		finishEdges()	 
+		self:finishEdges(returner[it])	 
+    end
 
-		returner[it].vertex = vertex
-		returner[it].segments = segments
-		returner[it].polygons = { }
-		--returner[it].polygons[1] = { }
-
-
-		-- trying to make polygons ...
-		local segmentalist = { }
-		for i,segment in pairs(segments) do
-
-			if segmentalist[mfunc:round(segment.startPoint.x,0)*mfunc:round(segment.startPoint.y,0)] == nil then 
-				segmentalist[mfunc:round(segment.startPoint.x,0)*mfunc:round(segment.startPoint.y,0)] = { } end
-
-			segmentalist[mfunc:round(segment.startPoint.x,0)*mfunc:round(segment.startPoint.y,0)][#segmentalist[mfunc:round(segment.startPoint.x,0)*mfunc:round(segment.startPoint.y,0)]+1] = 
-			{
-				x = segment.endPoint.x,
-				y = segment.endPoint.y
-			}
-
-			if segmentalist[mfunc:round(segment.endPoint.x,0)*mfunc:round(segment.endPoint.y,0)] == nil then 
-				segmentalist[mfunc:round(segment.endPoint.x,0)*mfunc:round(segment.endPoint.y,0)] = { } end
-
-			segmentalist[mfunc:round(segment.endPoint.x,0)*mfunc:round(segment.endPoint.y,0)][#segmentalist[mfunc:round(segment.endPoint.x,0)*mfunc:round(segment.endPoint.y,0)]+1] = 
-			{
-				x = segment.startPoint.x,
-				y = segment.startPoint.y
-			}
-		end
-
-		local checkasstart = { }
-		local polygons = { }
-		for i,v in pairs(vertex) do v.index = i end
-		for i,v in pairs(vertex) do
-			local pnumber = #polygons+1
-			polygons[pnumber] = { }
-
-			if checkasstart[i] == nil then
-				checkasstart[i] = true
-
-				if polygons[pnumber] == nil then
-					local otherp = { } 
-					for j,p2 in pairs(segmentalist[mfunc:round(v.x,0)*mfunc:round(v.y,0)]) do
-						if (p2.x >= v.x) and (p2.y <= v.y) then
-							otherp[#otherp+1] = { x=p2.x, y=p2.y, index=p2.index, a = math.atan(math.abs(p2.y/p2.x)) }
-						end
-					end
-
-					if #otherp > 1 then otherp = mfunc:sorttable(otherp,'a',true) end
-
-					polygons[pnumber] = { v.x, v.y, otherp[1].x, otherp[1].y }
-					checkasstart[otherp[1].index] = true
-				local endpoint = { x = v.x, y = v.y }
-
-                end
-				
-			end
-
-		end
-	end
-
-	return returner[iterations]
+    -----------------------------
+    -- returns the last iteration
+    return returner[iterations]
 end
 
-function voronoi:keypressed(key,unicode)
-
-end
-
-function voronoi:keyreleased(key)
-end
-
+--------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+-- draws the voronoi diagram, used for debugging and visualizing the diagram before using it for anything else.
+--
+-- ivoronoi = the input voronoi structure. this is expecting the returner[it] from the creation function, 
+-- 			  should be the default output from voronoi:create()
 function voronoi:draw(ivoronoi)
 
-	oldcolor = { love.graphics.getColor() }
-
+	-- draw the points
 	love.graphics.setColor(255,255,255)
 	love.graphics.setPointSize(5)
-	for i,v in pairs(ivoronoi.points) do
-		love.graphics.point(v.x,v.y)
-	end	
-
-	love.graphics.setColor(100,100,100)
-	love.graphics.setPointSize(5)
-	for i,v in pairs(ivoronoi.vertex) do
-		love.graphics.point(v.x,v.y)
+	for index,point in pairs(ivoronoi.points) do
+		love.graphics.point(point.x,point.y)
 	end
 
-	love.graphics.setColor(200,100,0)
-	for i,v in pairs(ivoronoi.segments) do
-		love.graphics.line(v.startPoint.x,v.startPoint.y,v.endPoint.x,v.endPoint.y)
+	-- draws the segments
+	love.graphics.setColor(150,0,100)
+	for index,segment in pairs(ivoronoi.segments) do
+		love.graphics.line(segment.startPoint.x,segment.startPoint.y,segment.endPoint.x,segment.endPoint.y)
 	end
 
-	love.graphics.setColor(100,0,0)
-	for i,v in pairs(ivoronoi.polygons) do
-		love.graphics.polygon('fill',unpack(v))
-	end
 end
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+Heap = { }
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-Heap = {}
 function Heap:new() 
-    o = {heap = {}, nodes = {}} 
+    o = { heap = { }, nodes = { } } 
     setmetatable(o, self) 
     self.__index = self 
     return o
@@ -201,56 +110,68 @@ end
  
 function Heap:push(k, v)
     assert(v ~= nil, "cannot push nil")
-    local t = self.nodes
-    local h = self.heap
-    local n = #h + 1 -- node position in heap array (leaf)
-    local p = (n - n % 2) / 2 -- parent position in heap array
-    h[n] = k -- insert at a leaf
-    t[k] = v
-    while n > 1 and t[h[p]] > v do -- climb heap?
-        h[p], h[n] = h[n], h[p]
-        n = p
-        p = (n - n % 2) / 2
+
+    local heap_pos = #self.heap + 1 -- node position in heap array (leaf)
+    local parent_pos = (heap_pos - heap_pos % 2) / 2 -- parent position in heap array
+
+    self.heap[heap_pos] = k -- insert at a leaf
+    self.nodes[k] = v
+
+    while heap_pos > 1 and self.nodes[self.heap[parent_pos]] > v do -- climb heap?
+        self.heap[parent_pos], self.heap[heap_pos] = self.heap[heap_pos], self.heap[parent_pos]
+        heap_pos = parent_pos
+        parent_pos = (heap_pos - heap_pos % 2) / 2
     end
+
 end
  
 function Heap:pop()
-    local t = self.nodes
-    local h = self.heap
-    local s = #h
-    assert(s > 0, "cannot pop from empty heap")
-    local e = h[1] -- min (heap root)
-    local r = t[e]
-    local v = t[h[s]]
-    h[1] = h[s] -- move leaf to root
-    h[s] = nil -- remove leaf
-    t[e] = nil
-    s = s - 1
-    local n = 1 -- node position in heap array
-    local p = 2 * n -- left sibling position
-    if s > p and t[h[p]] > t[h[p + 1]] then
-        p = 2 * n + 1 -- right sibling position
+    local heap_pos = #self.heap
+
+    assert(heap_pos > 0, "cannot pop from empty heap")
+
+    local heap_root_pos = self.heap[1]
+    local heap_root = self.nodes[heap_root_pos]
+
+    local current_heap = self.nodes[self.heap[heap_pos]]
+
+    self.heap[1] = self.heap[heap_pos] -- move leaf to root
+    self.heap[heap_pos] = nil -- remove leaf
+    self.nodes[heap_root_pos] = nil
+    heap_pos = heap_pos - 1
+
+    local node_pos = 1 -- node position in heap array
+
+    local parent_pos = 2 * node_pos -- left sibling position
+    if heap_pos > parent_pos and self.nodes[self.heap[parent_pos]] > self.nodes[self.heap[parent_pos + 1]] then
+        parent_pos = 2 * node_pos + 1 -- right sibling position
     end
-    while s >= p and t[h[p]] < v do -- descend heap?
-        h[p], h[n] = h[n], h[p]
-        n = p
-        p = 2 * n
-    if s > p and t[h[p]] > t[h[p + 1]] then
-        p = 2 * n + 1
+    while heap_pos >= parent_pos and self.nodes[self.heap[parent_pos]] < current_heap do -- descend heap?
+        self.heap[parent_pos], self.heap[node_pos] = self.heap[node_pos], self.heap[parent_pos]
+        node_pos = parent_pos
+        parent_pos = 2 * node_pos
+    if heap_pos > parent_pos and self.nodes[self.heap[parent_pos]] > self.nodes[self.heap[parent_pos + 1]] then
+        parent_pos = 2 * node_pos + 1
     end
 end
-    return e, r
+    return heap_root_pos, heap_root
 end
  
 function Heap:isEmpty() 
     return self.heap[1] == nil 
 end
- 
-DoubleLinkedList = {}
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+DoubleLinkedList = { }
+
 function DoubleLinkedList:new()
-    o = {first = nil, last = nil} -- empty list head
+    o = { first = nil, last = nil } -- empty list head
+
     setmetatable(o, self) 
     self.__index = self 
+
     return o
 end
  
@@ -299,14 +220,18 @@ end
 function DoubleLinkedList:nextNode(node)
     return (not node and self.first) or node.next
 end
- 
-function processEvent(event)
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+function voronoi:processEvent(event,ivoronoi)
     if event.valid then
-        segment = {startPoint = {x = event.x, y = event.y}, endPoint = {x = 0, y = 0}, done = false, type = 1}
-        table.insert(segments, segment)
+        local segment = {startPoint = {x = event.x, y = event.y}, endPoint = {x = 0, y = 0}, done = false, type = 1}
+        table.insert(ivoronoi.segments, segment)
         --Remove the associated arc from the front, and update segment info
         
-        beachline:delete(event.arc)
+        ivoronoi.beachline:delete(event.arc)
         
         if event.arc.prev then
             event.arc.prev.seg1 = segment
@@ -328,14 +253,14 @@ function processEvent(event)
         end    
         
         -- debugging vertix list!!!
-        table.insert(vertex, {x = event.x, y = event.y})
+        table.insert(ivoronoi.vertex, {x = event.x, y = event.y})
         
         --Recheck circle events on either side of p:
         if (event.arc.prev) then
-            check_circle_event(event.arc.prev, event.x)
+            self:check_circle_event(event.arc.prev, event.x,ivoronoi)
         end
         if (event.arc.next) then
-            check_circle_event(event.arc.next, event.x)
+            self:check_circle_event(event.arc.next, event.x,ivoronoi)
         end    
         event.arc = nil
    end
@@ -343,22 +268,22 @@ function processEvent(event)
 end
  
  
-function processPoint(point)
+function voronoi:processPoint(point,ivoronoi)
     --Adds a point to the beachline
     local intersect = intersect
-    if (not beachline.first) then
-        beachline:insertAtStart(point)
+    if (not ivoronoi.beachline.first) then
+        ivoronoi.beachline:insertAtStart(point)
         return
     end
     
     --Find the current arc(s) at height p.y (if there are any).
-    for arc in beachline.nextNode, beachline do
+    for arc in ivoronoi.beachline.nextNode, ivoronoi.beachline do
         z = (intersect(point,arc))
         if z then
             --New parabola intersects arc i.  If necessary, duplicate i.
             -- ie if there is a next node, but there is not interation, then creat a duplicate
             if not (arc.next and (intersect(point,arc.next))) then
-                beachline:insertAfter(arc, arc)
+                ivoronoi.beachline:insertAfter(arc, arc)
             else    
                 --print("test", arc.next,intersect(point,arc.next).x,intersect(point,arc.next).y, z.x,z.y  )
                 return
@@ -366,15 +291,15 @@ function processPoint(point)
             arc.next.seg1 = arc.seg1
             
             --Add p between i and i->next.
-            beachline:insertAfter(arc, point)
+            ivoronoi.beachline:insertAfter(arc, point)
  
             
             segment = {startPoint = {x = z.x, y = z.y}, endPoint = {x = 0, y = 0}, done = false, type = 2}
             segment2 = {startPoint = {x = z.x, y = z.y}, endPoint = {x = 0, y = 0}, done = false, type = 2}
  
             -- debugging segment list!!!
-            table.insert(segments, segment)
-            table.insert(segments, segment2)
+            table.insert(ivoronoi.segments, segment)
+            table.insert(ivoronoi.segments, segment2)
  
             
             --Add new half-edges connected to i's endpoints.
@@ -384,9 +309,9 @@ function processPoint(point)
             arc.next.next.seg0 = segment2
             
             --Check for new circle events around the new arc:
-            check_circle_event(arc, point.x)
-            check_circle_event(arc.next, point.x)
-            check_circle_event(arc.next.next, point.x)
+            self:check_circle_event(arc, point.x, ivoronoi)
+            self:check_circle_event(arc.next, point.x, ivoronoi)
+            self:check_circle_event(arc.next.next, point.x, ivoronoi)
  
             return
             
@@ -397,19 +322,19 @@ function processPoint(point)
     --Special case: If p never intersects an arc, append it to the list.
     -- Find the last node.
     
-    beachline:insertAtStart(point)
+    ivoronoi.beachline:insertAtStart(point)
  
-    segment = {startPoint = {x = X0, y = (beachline.last.y + beachline.last.prev.y) / 2}, endPoint = {x = 0, y = 0}, done = false, type = 3}
+    segment = {startPoint = {x = X0, y = (ivoronoi.beachline.last.y + ivoronoi.beachline.last.prev.y) / 2}, endPoint = {x = 0, y = 0}, done = false, type = 3}
     
     table.insert(segments, segment)
     
-    beachline.last.seg0 = segment
-    beachline.last.prev.seg1 = segment
+    ivoronoi.beachline.last.seg0 = segment
+    ivoronoi.beachline.last.prev.seg1 = segment
 end
  
  
  
-function check_circle_event(arc, x0)
+function voronoi:check_circle_event(arc, x0, ivoronoi)
     --Look for a new circle event for arc i.
     --Invalidate any old event.
  
@@ -455,7 +380,7 @@ function check_circle_event(arc, x0)
     if x and x > x0 then
         --Create new event.
         arc.event = {x = o.x, y = o.y, arc = arc, valid = true, event = true}
-        events:push(arc.event, x)
+        ivoronoi.events:push(arc.event, x)
     end
 end
  
@@ -516,12 +441,12 @@ function intersection(p0, p1, l)
    return res
 end
  
-function finishEdges()
+function voronoi:finishEdges(ivoronoi)
     --Advance the sweep line so no parabolas can cross the bounding box.
-    l = X1 + (X1-X0) + (Y1-Y0)
+    l = ivoronoi.boundary[3] + (ivoronoi.boundary[3]-ivoronoi.boundary[1]) + (ivoronoi.boundary[4]-ivoronoi.boundary[2])
  
     --Extend each remaining segment to the new parabola intersections.
-    for arc in beachline.nextNode, beachline do
+    for arc in ivoronoi.beachline.nextNode, ivoronoi.beachline do
         if arc.seg1 then
             p = intersection(arc, arc.next, l*2)
             arc.seg1.endPoint = {x = p.x, y = p.y}

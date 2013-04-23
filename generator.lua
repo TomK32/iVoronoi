@@ -2,7 +2,7 @@ gen = { }
 gen.regions = { }
 
 framesize = { x=400, y=400 }
-pointcount = 30
+pointcount = 6
 
 function gen:initalize()
 	-- fixed for testing, remove the seed when testing is finished
@@ -13,11 +13,11 @@ function gen:initalize()
 end
 
 function gen:keypressed(key,unicode)
-	voronoi:keypressed(key,unicode)
+
 end
 
 function gen:keyreleased(key)
-	voronoi:keyreleased(key)
+
 end
 
 function gen:draw()
