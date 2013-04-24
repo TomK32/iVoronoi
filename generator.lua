@@ -8,8 +8,17 @@ function gen:initalize()
 	-- fixed for testing, remove the seed when testing is finished
 	--math.randomseed(1234)
 	--local seed = math.random(1,55555)
-	--math.randomseed(31138)
+	math.randomseed(30202)
 	--print('seed used: ' .. seed)
+
+	-- numbers with problems, fix them
+	-- 31138 (250 points, 1000x600)
+	-- 40953 (250 points, 1000x600)
+	-- 19288 (250 points, 1000x600)
+	-- 48962 (250 points, 1000x600)
+
+	-- this one has a 'sorting' error ... 'invalid order for sorting'
+	-- 30202 (250 points, 1000x600), mfunc:sortpoints cause this. if you remove it, it works but then it looks bad
 
 	gen.regions = voronoi:create(pointcount,1,25,25,framesize.x,framesize.y)
 

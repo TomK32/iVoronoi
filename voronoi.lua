@@ -109,6 +109,9 @@ function voronoi:dirty_poly(invoronoi)
 		{ x = invoronoi.boundary[3], y = invoronoi.boundary[2] },
 		{ x = invoronoi.boundary[3], y = invoronoi.boundary[4] }
 	}
+
+	-- checks all the segments to see if they pass through the boundary, if they do then this section will
+	-- 'trim' the line so it stops at the boundary
 	for i,v in pairs(invoronoi.segments) do
 		local isects = { }
 		local removetheline = false
@@ -160,9 +163,14 @@ function voronoi:dirty_poly(invoronoi)
 			end 
 		end
 	end
+	-- merges the points from otherpoints into the processingpoints table
 	for i,v in pairs(otherpoints) do table.insert(processingpoints,v) end
 
-
+	-----------------------------------------------------------------------------------------------------------------------------------------
+	-- this is the part that actually makes the polygons. it does so by calculating the distance from the vertecies
+	-- to the randomgenpoints. the shortest distance means that the vertex belongs to that randomgenpoint. voronoi diagrams are constructed
+	-- on the fact that these vertexes are equi-distant from the randomgenpoints, so most vertecies will have multiple owning randomgenpoints,
+	-- except for the boundary points.
 	for vindex,point in pairs(processingpoints) do
 		local distances = { }
 		---------------------------------------------------------------
@@ -175,7 +183,6 @@ function voronoi:dirty_poly(invoronoi)
 		local mindistance = distances[1].d
 		local i = 1
 		while (distances[i].d - mindistance < constants.zero) do
-			--print(distances[i].i)
 			if polygon[distances[i].i] == nil then
 				polygon[distances[i].i] = { }
 				polygon[distances[i].i][1] = { x = point.x, y = point.y }
@@ -472,8 +479,7 @@ function voronoi:processPoint(point,ivoronoi)
     
     ivoronoi.beachline:insertAtStart(point)
  
-    segment = {startPoint = {x = X0, y = (ivoronoi.beachline.last.y + ivoronoi.beachline.last.prev.y) / 2}, endPoint = {x = 0, y = 0}, done = false, type = 3}
-    
+    segment = {startPoint = {x = ivoronoi.boundary[1], y = (ivoronoi.beachline.last.y + ivoronoi.beachline.last.prev.y) / 2}, endPoint = {x = 0, y = 0}, done = false, type = 3}
     table.insert(ivoronoi.segments, segment)
     
     ivoronoi.beachline.last.seg0 = segment
