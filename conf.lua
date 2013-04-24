@@ -7,7 +7,7 @@ function love.conf(t)
     t.author = "Domagoj Jursic"
     t.company = "the Interstellar"
     t.url = "theinterstellarDAVE@gmail.com"
-    t.debug = true
+    t.console = true
 
     -- this is the default window size
     windowsize = {}; windowsize.x = t.screen.width; windowsize.y = t.screen.height;

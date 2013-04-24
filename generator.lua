@@ -1,14 +1,17 @@
 gen = { }
 gen.regions = { }
 
-framesize = { x=400, y=400 }
-pointcount = 11
+framesize = { x=windowsize.x-50, y=windowsize.y-50 }
+pointcount = 250
 
 function gen:initalize()
 	-- fixed for testing, remove the seed when testing is finished
-	math.randomseed(1234)
+	--math.randomseed(1234)
+	--local seed = math.random(1,55555)
+	--math.randomseed(31138)
+	--print('seed used: ' .. seed)
 
-	gen.regions = voronoi:create(pointcount,1,300,100,framesize.x,framesize.y)
+	gen.regions = voronoi:create(pointcount,1,25,25,framesize.x,framesize.y)
 
 end
 
@@ -26,7 +29,7 @@ function gen:draw()
 
 	love.graphics.setColor(255,255,255)
 
-	love.graphics.rectangle('line',300,100,400,400)
+	love.graphics.rectangle('line',gen.regions.boundary[1],gen.regions.boundary[2],gen.regions.boundary[3]-gen.regions.boundary[1],gen.regions.boundary[4]-gen.regions.boundary[2])
 
 end
 

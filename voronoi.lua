@@ -29,7 +29,7 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 		returner[it].events = Heap:new()
 		returner[it].beachline = DoubleLinkedList:new()
 		returner[it].polygons = { }
-		returner[it].polylink = { }
+		returner[it].centroids = { }
 
 		---------------------------------------------------------
 		-- creates the random points that the polygons will be based
@@ -69,6 +69,10 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 
 		self:dirty_poly(returner[it])
 
+		for i,polygon in pairs(returner[it].polygons) do
+			local cx, cy = mfunc:polyoncentroid(polygon)
+			returner[it].centroids[i] = { x = cx, y = cy }
+		end
 
 
     end
@@ -87,14 +91,16 @@ function voronoi:dirty_poly(invoronoi)
 
 	-- removes the points that are outside the boundary
 	local processingpoints = invoronoi.vertex
-	--[[for i=#processingpoints,1,-1 do
+	for i=#processingpoints,1,-1 do
 		-- checks the boundaries, and then removes it
 		if (processingpoints[i].x < invoronoi.boundary[1]) or (processingpoints[i].x > invoronoi.boundary[3]) or (processingpoints[i].y < invoronoi.boundary[2]) or (processingpoints[i].y > invoronoi.boundary[4]) then
 			-- removes the item
-			for remove=#processingpoints-1,i,-1 do processingpoints[remove] = processingpoints[remove+1] end
-			processingpoints[#processingpoints] = nil
+			--for remove=#processingpoints-1,i,-1 do processingpoints[remove] = processingpoints[remove+1] end
+			--processingpoints[#processingpoints] = nil
+			--print('bad point',processingpoints[i].x,processingpoints[i].y)
+			processingpoints[i] = nil
 		end
-	end]]--
+	end
 
 	-- adds other points that are not in the vertexes, like the corners and intersections with the boundary
 	local otherpoints = {
@@ -105,10 +111,11 @@ function voronoi:dirty_poly(invoronoi)
 	}
 	for i,v in pairs(invoronoi.segments) do
 		local isects = { }
+		local removetheline = false
 
 		-- left boundary
 		if (v.startPoint.x < invoronoi.boundary[1]) or (v.endPoint.x < invoronoi.boundary[1]) then 
-
+			removetheline = true
 			local px,py,onlines = mfunc:intersectionpoint(
 				{ invoronoi.boundary[1],invoronoi.boundary[2],invoronoi.boundary[1],invoronoi.boundary[4] },
 				{ v.startPoint.x, v.startPoint.y, v.endPoint.x, v.endPoint.y }
@@ -117,6 +124,7 @@ function voronoi:dirty_poly(invoronoi)
 		end
 		-- right boundary
 		if (v.startPoint.x > invoronoi.boundary[3]) or (v.endPoint.x > invoronoi.boundary[3]) then 
+			removetheline = true
 			local px,py,onlines = mfunc:intersectionpoint(
 				{ invoronoi.boundary[3],invoronoi.boundary[2],invoronoi.boundary[3],invoronoi.boundary[4] },
 				{ v.startPoint.x, v.startPoint.y, v.endPoint.x, v.endPoint.y }
@@ -125,6 +133,7 @@ function voronoi:dirty_poly(invoronoi)
 		end
 		--top boundary
 		if (v.startPoint.y < invoronoi.boundary[2]) or (v.endPoint.y < invoronoi.boundary[2]) then 
+			removetheline = true
 			local px,py,onlines = mfunc:intersectionpoint(
 				{ invoronoi.boundary[1],invoronoi.boundary[2],invoronoi.boundary[3],invoronoi.boundary[2] },
 				{ v.startPoint.x, v.startPoint.y, v.endPoint.x, v.endPoint.y }
@@ -134,6 +143,7 @@ function voronoi:dirty_poly(invoronoi)
 		end
 		-- bottom boundary
 		if (v.startPoint.y > invoronoi.boundary[4]) or (v.endPoint.y > invoronoi.boundary[4]) then 
+			removetheline = true
 			local px,py,onlines = mfunc:intersectionpoint(
 				{ invoronoi.boundary[1],invoronoi.boundary[4],invoronoi.boundary[3],invoronoi.boundary[4] },
 				{ v.startPoint.x, v.startPoint.y, v.endPoint.x, v.endPoint.y }
@@ -141,8 +151,14 @@ function voronoi:dirty_poly(invoronoi)
 			isects[#isects+1] = { x=px,y=py,on=onlines }	 
 		end
 
+		--if removetheline then invoronoi.segments[i] = nil end
+
 		-- checks if the point is in or on the boundary lines
-		for index,ise in pairs(isects) do if ise.on then otherpoints[#otherpoints+1] = { x = ise.x, y = ise.y }  end end
+		for index,ise in pairs(isects) do 
+			if ise.on then 
+				otherpoints[#otherpoints+1] = { x = ise.x, y = ise.y }  
+			end 
+		end
 	end
 	for i,v in pairs(otherpoints) do table.insert(processingpoints,v) end
 
@@ -159,7 +175,7 @@ function voronoi:dirty_poly(invoronoi)
 		local mindistance = distances[1].d
 		local i = 1
 		while (distances[i].d - mindistance < constants.zero) do
-			print(distances[i].i)
+			--print(distances[i].i)
 			if polygon[distances[i].i] == nil then
 				polygon[distances[i].i] = { }
 				polygon[distances[i].i][1] = { x = point.x, y = point.y }
@@ -171,7 +187,6 @@ function voronoi:dirty_poly(invoronoi)
 	end
 
 	for i=1,#invoronoi.points do 
-		print(i,polygon[i])
 		invoronoi.polygons[i] = mfunc:sortpolydraworder(polygon[i])
 	end
 end
@@ -185,15 +200,7 @@ end
 -- 			  should be the default output from voronoi:create()
 function voronoi:draw(ivoronoi)
 
-	-- draw the points
-	love.graphics.setColor(255,255,255)
-	love.graphics.setPointSize(7)
-	for index,point in pairs(ivoronoi.points) do
-		love.graphics.point(point.x,point.y)
-		love.graphics.print(index,point.x,point.y)
-	end
-
-	-- draws the segments
+	--[[ draws the segments
 	love.graphics.setColor(150,0,100)
 	for index,segment in pairs(ivoronoi.segments) do
 		love.graphics.line(segment.startPoint.x,segment.startPoint.y,segment.endPoint.x,segment.endPoint.y)
@@ -204,17 +211,31 @@ function voronoi:draw(ivoronoi)
 	love.graphics.setPointSize(5)
 	for index,vertex in pairs(ivoronoi.vertex) do
 		love.graphics.point(vertex.x,vertex.y)
-	end
+	end]]--
 
 	-- draws the polygons
-	love.graphics.setColor(50,50,255)
 	for index,polygon in pairs(ivoronoi.polygons) do
 		if #polygon >= 6 then
-			love.graphics.setColor(50,50,255)
+			love.graphics.setColor(50,50,50)
 			love.graphics.polygon('fill',unpack(polygon))
 			love.graphics.setColor(255,255,255)
 			love.graphics.polygon('line',unpack(polygon))
 		end
+	end
+
+	-- draw the points
+	love.graphics.setColor(255,255,255)
+	love.graphics.setPointSize(7)
+	for index,point in pairs(ivoronoi.points) do
+		love.graphics.point(point.x,point.y)
+		--love.graphics.print(index,point.x,point.y)
+	end
+
+	-- draws the centroids
+	love.graphics.setColor(255,255,0)
+	love.graphics.setPointSize(5)
+	for index,point in pairs(ivoronoi.centroids) do
+		love.graphics.point(point.x,point.y)
 	end
 
 end
