@@ -2,7 +2,7 @@ gen = { }
 gen.regions = { }
 
 framesize = { x=windowsize.x-50, y=windowsize.y-50 }
-pointcount = 250
+pointcount = 10
 
 function gen:initalize()
 	-- fixed for testing, remove the seed when testing is finished

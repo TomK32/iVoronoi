@@ -29,6 +29,7 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 		returner[it].events = Heap:new()
 		returner[it].beachline = DoubleLinkedList:new()
 		returner[it].polygons = { }
+		returner[it].polygonmap = { }
 		returner[it].centroids = { }
 
 		---------------------------------------------------------
@@ -46,7 +47,9 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 				}
 			end
 			-- sorts the polygon midpoints
-			returner[it].points = mfunc:sortpoints(returner[it].points)
+			--mfunc:sortpoints(returner[it].points)
+			-- commented this out because it caused a 'invalid sorting funciton when using the seed 30202 (250 points, 1000x600)'
+			returner[it].points = mfunc:sortthepoints(returner[it].points)
 		else
 			returner[it].points = returner[it-1].centroids
 		end
@@ -73,7 +76,6 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 			local cx, cy = mfunc:polyoncentroid(polygon)
 			returner[it].centroids[i] = { x = cx, y = cy }
 		end
-
 
     end
     -----------------------------
@@ -184,13 +186,40 @@ function voronoi:dirty_poly(invoronoi)
 		local i = 1
 		while (distances[i].d - mindistance < constants.zero) do
 			if polygon[distances[i].i] == nil then
+
 				polygon[distances[i].i] = { }
 				polygon[distances[i].i][1] = { x = point.x, y = point.y }
 			else
 				polygon[distances[i].i][#polygon[distances[i].i]+1] = { x = point.x, y = point.y }
 			end
+			--print(vindex,distances[i].i)
+
 			i = i + 1
 		end
+		
+		--------------------------------------------------------------------------------------------------
+		-- creates the relationship between polygons, which looks like a delaunay triangulation when drawn
+		
+		-- gets all the related polygons here. 
+		i = i - 1
+		local related = { }
+		for j=1,i do 
+			related[#related+1] = distances[j].i 
+			print('ds',j,distances[j].i)
+		end
+
+		-- puts them in a structure, calling it polygonmap
+		for j=1,#related do
+			if invoronoi.polygonmap[related[j]] == nil then invoronoi.polygonmap[related[j]] = { } end
+			for k=1,#related do
+				if not mfunc:tablecontains(invoronoi.polygonmap[related[j]],nil,related[k]) and (related[j] ~= related[k]) then
+					invoronoi.polygonmap[related[j]][#invoronoi.polygonmap[related[j]]+1] = related[k]
+				end
+			end
+		end
+	end
+	for a,s in pairs(invoronoi.polygonmap)do
+		print(a,unpack(s))
 	end
 
 	for i=1,#invoronoi.points do 
@@ -235,7 +264,7 @@ function voronoi:draw(ivoronoi)
 	love.graphics.setPointSize(7)
 	for index,point in pairs(ivoronoi.points) do
 		love.graphics.point(point.x,point.y)
-		--love.graphics.print(index,point.x,point.y)
+		love.graphics.print(index,point.x,point.y)
 	end
 
 	-- draws the centroids
@@ -243,8 +272,16 @@ function voronoi:draw(ivoronoi)
 	love.graphics.setPointSize(5)
 	for index,point in pairs(ivoronoi.centroids) do
 		love.graphics.point(point.x,point.y)
+		love.graphics.print(index,point.x,point.y)
 	end
 
+	--draws the relationship lines
+	love.graphics.setColor(0,255,0)
+	for pointindex,relationgroups in pairs(ivoronoi.polygonmap) do
+		for badindex,subpindex in pairs(relationgroups) do
+			love.graphics.line(ivoronoi.centroids[pointindex].x,ivoronoi.centroids[pointindex].y,ivoronoi.centroids[subpindex].x,ivoronoi.centroids[subpindex].y)
+		end
+	end
 end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------

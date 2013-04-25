@@ -11,6 +11,11 @@ function mfunc:sortpoints(points)
 		)
 	return points
 end
+function mfunc:sortthepoints(points)
+	local sortedpoints = self:sorttable(points,'x',true)
+	sortedpoints = self:sorttable(sortedpoints,'y',true)
+	return sortedpoints
+end
 
 function mfunc:insideboundaries(px,py,boundary)
 	-- checks if the point is inside the square defined by the boundary
@@ -19,6 +24,21 @@ function mfunc:insideboundaries(px,py,boundary)
 	else
 		return false
 	end
+end
+
+function mfunc:tablecontains(tablename,attributename,value)
+
+	if attributename == nil then
+		for i,v in pairs(tablename) do
+			if v == value then return true end
+		end
+	else
+		for i,v in pairs(tablename) do
+			if v[attributename] == value then return true end
+		end
+	end
+	return false
+
 end
 
 function mfunc:sortpolydraworder(listofpoints)
