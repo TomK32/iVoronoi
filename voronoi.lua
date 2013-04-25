@@ -39,12 +39,14 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 		-- this relaxes the voronoi diagram and softens the grids so
 		-- the grid is more even.
 		if it == 1 then 
+			-- creates a random point and then checks to see if that point is already inside the set of random points. 
+			-- don't know what would happened but it would not return the same amount of polygons that user requested
 			for i=1,polygoncount do
-				returner[it].points[i] = 
-				{ 
-					x = math.random(returner[it].boundary[1]+1,returner[it].boundary[3]-1), 
-					y = math.random(returner[it].boundary[2]+1,returner[it].boundary[4]-1) 
-				}
+				local rx,ry = self:randompoint(returner[it].boundary)
+				while mfunc:tablecontains(returner[it].points,{ 'x', 'y' }, { rx, ry }) do
+					rx,ry = self:randompoint(returner[it].boundary)
+				end
+				returner[it].points[i] = { x = rx, y = ry }
 			end
 			-- sorts the polygon midpoints
 			--mfunc:sortpoints(returner[it].points)
@@ -83,6 +85,14 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
     return returner[iterations]
 end
 
+---------------------------------------------
+-- generates randompoints
+function voronoi:randompoint(boundary)
+	local x = math.random(boundary[1]+1,boundary[3]-1) 
+	local y = math.random(boundary[2]+1,boundary[4]-1)
+
+	return x,y 
+end
 
 -----------------------------------------------------------------------------------------------------------------------------
 -- i get lost in the arc tables. this is a way to make polygons. it might not be as fast as

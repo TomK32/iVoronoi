@@ -32,6 +32,14 @@ function mfunc:tablecontains(tablename,attributename,value)
 		for i,v in pairs(tablename) do
 			if v == value then return true end
 		end
+	elseif type(attributename) == 'table' then
+		for i,v in pairs(tablename) do
+			local match = 0
+			for j,v2 in pairs(attributename) do
+				if v[v2] == value[j] then match = match + 1 end
+			end
+			if match == #attributename then return true end
+		end
 	else
 		for i,v in pairs(tablename) do
 			if v[attributename] == value then return true end
