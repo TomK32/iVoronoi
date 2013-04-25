@@ -2,13 +2,12 @@ gen = { }
 gen.regions = { }
 
 framesize = { x=windowsize.x-50, y=windowsize.y-50 }
-pointcount = 10
+pointcount = 50
 
 function gen:initalize()
 	-- fixed for testing, remove the seed when testing is finished
-	--math.randomseed(1234)
 	--local seed = math.random(1,55555)
-	math.randomseed(30202)
+	math.randomseed(45754)
 	--print('seed used: ' .. seed)
 
 	-- numbers with problems, fix them
@@ -19,6 +18,8 @@ function gen:initalize()
 
 	-- this one has a 'sorting' error ... 'invalid order for sorting'
 	-- 30202 (250 points, 1000x600), mfunc:sortpoints cause this. if you remove it, it works but then it looks bad
+
+	-- 36758 (50 points, 1000x600)
 
 	gen.regions = voronoi:create(pointcount,1,25,25,framesize.x,framesize.y)
 

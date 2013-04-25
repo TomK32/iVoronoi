@@ -42,8 +42,8 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 			for i=1,polygoncount do
 				returner[it].points[i] = 
 				{ 
-					x = math.random(returner[it].boundary[1],returner[it].boundary[3]), 
-					y = math.random(returner[it].boundary[2],returner[it].boundary[4]) 
+					x = math.random(returner[it].boundary[1]+1,returner[it].boundary[3]-1), 
+					y = math.random(returner[it].boundary[2]+1,returner[it].boundary[4]-1) 
 				}
 			end
 			-- sorts the polygon midpoints
@@ -205,7 +205,6 @@ function voronoi:dirty_poly(invoronoi)
 		local related = { }
 		for j=1,i do 
 			related[#related+1] = distances[j].i 
-			print('ds',j,distances[j].i)
 		end
 
 		-- puts them in a structure, calling it polygonmap
@@ -217,9 +216,6 @@ function voronoi:dirty_poly(invoronoi)
 				end
 			end
 		end
-	end
-	for a,s in pairs(invoronoi.polygonmap)do
-		print(a,unpack(s))
 	end
 
 	for i=1,#invoronoi.points do 
