@@ -78,7 +78,7 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 			local cx, cy = mfunc:polyoncentroid(polygon)
 			returner[it].centroids[i] = { x = cx, y = cy }
 		end
-
+		print('centroid count for ' .. it .. ' is ' .. #returner[it].centroids)
     end
     -----------------------------
     -- returns the last iteration
@@ -195,6 +195,7 @@ function voronoi:dirty_poly(invoronoi)
 		local mindistance = distances[1].d
 		local i = 1
 		while (distances[i].d - mindistance < constants.zero) do
+
 			if polygon[distances[i].i] == nil then
 
 				polygon[distances[i].i] = { }
@@ -229,7 +230,10 @@ function voronoi:dirty_poly(invoronoi)
 	end
 
 	for i=1,#invoronoi.points do 
-		invoronoi.polygons[i] = mfunc:sortpolydraworder(polygon[i])
+		-- quick fix to stop crashing
+		if polygon[i] ~= nil then
+			invoronoi.polygons[i] = mfunc:sortpolydraworder(polygon[i])
+		end
 	end
 end
 
@@ -242,19 +246,6 @@ end
 -- 			  should be the default output from voronoi:create()
 function voronoi:draw(ivoronoi)
 
-	--[[ draws the segments
-	love.graphics.setColor(150,0,100)
-	for index,segment in pairs(ivoronoi.segments) do
-		love.graphics.line(segment.startPoint.x,segment.startPoint.y,segment.endPoint.x,segment.endPoint.y)
-	end
-
-	-- draws the segment's vertices
-	love.graphics.setColor(250,100,200)
-	love.graphics.setPointSize(5)
-	for index,vertex in pairs(ivoronoi.vertex) do
-		love.graphics.point(vertex.x,vertex.y)
-	end]]--
-
 	-- draws the polygons
 	for index,polygon in pairs(ivoronoi.polygons) do
 		if #polygon >= 6 then
@@ -264,6 +255,19 @@ function voronoi:draw(ivoronoi)
 			love.graphics.polygon('line',unpack(polygon))
 		end
 	end
+
+	-- draws the segments
+	--[[love.graphics.setColor(150,0,100)
+	for index,segment in pairs(ivoronoi.segments) do
+		love.graphics.line(segment.startPoint.x,segment.startPoint.y,segment.endPoint.x,segment.endPoint.y)
+	end]]--
+
+	-- draws the segment's vertices
+	--[[love.graphics.setColor(250,100,200)
+	love.graphics.setPointSize(5)
+	for index,vertex in pairs(ivoronoi.vertex) do
+		love.graphics.point(vertex.x,vertex.y)
+	end]]--
 
 	-- draw the points
 	love.graphics.setColor(255,255,255)
@@ -281,7 +285,7 @@ function voronoi:draw(ivoronoi)
 		love.graphics.print(index,point.x,point.y)
 	end
 
-	--draws the relationship lines
+	-- draws the relationship lines
 	love.graphics.setColor(0,255,0)
 	for pointindex,relationgroups in pairs(ivoronoi.polygonmap) do
 		for badindex,subpindex in pairs(relationgroups) do

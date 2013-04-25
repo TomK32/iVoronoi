@@ -7,21 +7,10 @@ pointcount = 50
 function gen:initalize()
 	-- fixed for testing, remove the seed when testing is finished
 	--local seed = math.random(1,55555)
-	math.randomseed(45754)
+	--math.randomseed(41493)
 	--print('seed used: ' .. seed)
 
-	-- numbers with problems, fix them
-	-- 31138 (250 points, 1000x600)
-	-- 40953 (250 points, 1000x600)
-	-- 19288 (250 points, 1000x600)
-	-- 48962 (250 points, 1000x600)
-
-	-- this one has a 'sorting' error ... 'invalid order for sorting'
-	-- 30202 (250 points, 1000x600), mfunc:sortpoints cause this. if you remove it, it works but then it looks bad
-
-	-- 36758 (50 points, 1000x600)
-
-	gen.regions = voronoi:create(pointcount,1,25,25,framesize.x,framesize.y)
+	gen.regions = voronoi:create(pointcount,3,25,25,framesize.x,framesize.y)
 
 end
 
