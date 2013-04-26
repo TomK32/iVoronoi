@@ -1,4 +1,4 @@
-## Voronoi Polygon Generator written in Lua for Love2D
+## Voronoi Polygon Generator written in Lua
 
 ![Example Diagram, 50 points and 3 iterations](readme_files/examplediagram.png)
 
@@ -8,7 +8,7 @@ MIT License
 
 What this is
 ----
-This is free to use Lua / Love2D implementation of a Voronoi Generator. I wanted to experiment with using voronoi polygons to create a procedurally generated landscape and could not find a lua implementation to use that I liked. I programmed one from scratch which did not use any fast or popular algorithm (it use a geometric algorithm) which resulted in calculation times of up to 15 minutes for a 200 point diagram. This algorithm (Fortune's Algorithm) does that in a matter of seconds.
+This is free to use Lua implementation of a Voronoi Generator. I wanted to experiment with using voronoi polygons to create a procedurally generated landscape and could not find a lua implementation to use that I liked. I programmed one from scratch which did not use any fast or popular algorithm (it use a geometric algorithm) which resulted in calculation times of up to 15 minutes for a 200 point diagram. This algorithm (Fortune's Algorithm) does that in a matter of seconds.
 
 The intent of this project is to have a simple to use Voronoi generator which allows one to access the polygons and their relationships with other polygons.
 
