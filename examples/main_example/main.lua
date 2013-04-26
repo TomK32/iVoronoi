@@ -1,8 +1,10 @@
 function love.load()
-	require 'constants'
-	require 'mathfuncs'
-	require 'voronoi'
+
+	package.path = 'D:/Documents/Programming/voronoi/?.lua;' .. package.path
+	--package.path = './../../?.lua;' .. package.path
+
 	require 'generator'
+	require 'voronoi'
 
 	gen:initalize()
 end
