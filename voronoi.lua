@@ -73,9 +73,6 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 				end
 				returner[it].points[i] = { x = rx, y = ry }
 			end
-			-- sorts the polygon midpoints
-			--mfunc:sortpoints(returner[it].points)
-			-- commented this out because it caused a 'invalid sorting funciton when using the seed 30202 (250 points, 1000x600)'
 			returner[it].points = mfunc:sortthepoints(returner[it].points)
 		else
 			returner[it].points = returner[it-1].centroids
@@ -103,7 +100,6 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 			local cx, cy = mfunc:polyoncentroid(polygon)
 			returner[it].centroids[i] = { x = cx, y = cy }
 		end
-		print('centroid count for ' .. it .. ' is ' .. #returner[it].centroids)
     end
     -----------------------------
     -- returns the last iteration
@@ -682,41 +678,21 @@ function voronoi:finishEdges(ivoronoi)
 end
 
 
---------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
 constants = { }
 
 constants.zero = 0.01
---------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
 mfunc = { }
 
-mfunc.zerothreshold = 0.01
-
-function mfunc:sortpoints(points)
-		table.sort(points,function (a,b) 	if a.y < b.y then return true 
-											elseif a.y == b.y then	
-												if a.x < b.y then return true
-												else return false end
-											else return false end end
-		)
-	return points
-end
 function mfunc:sortthepoints(points)
 	local sortedpoints = self:sorttable(points,'x',true)
 	sortedpoints = self:sorttable(sortedpoints,'y',true)
 	return sortedpoints
-end
-
-function mfunc:insideboundaries(px,py,boundary)
-	-- checks if the point is inside the square defined by the boundary
-	if (boundary[1] <= px) and (boundary[2] <= py) and (boundary[3] >= px) and (boundary[4] >= py) then 
-		return true
-	else
-		return false
-	end
 end
 
 function mfunc:tablecontains(tablename,attributename,value)
@@ -780,7 +756,7 @@ function mfunc:sortpolydraworder(listofpoints)
 	unpacked = { }
 	for i,point in pairs(returner) do
 		if i > 1 then
-			if (math.abs(unpacked[#unpacked-1] - point.x) < mfunc.zerothreshold) and (math.abs(unpacked[#unpacked] - point.y) < mfunc.zerothreshold) then
+			if (math.abs(unpacked[#unpacked-1] - point.x) < constants.zero) and (math.abs(unpacked[#unpacked] - point.y) < constants.zero) then
 				-- duplicate point, so do nothing
 			else
 				unpacked[#unpacked+1] = point.x
@@ -910,7 +886,7 @@ function mfunc:sortpolydraworder(listofpoints)
 			returner[1] = point.x
 			returner[2] = point.y
 		else
-			if (math.abs(returner[#returner-1] - point.x) < mfunc.zerothreshold) and (math.abs(returner[#returner] - point.y) < mfunc.zerothreshold) then
+			if (math.abs(returner[#returner-1] - point.x) < constants.zero) and (math.abs(returner[#returner] - point.y) < constants.zero) then
 				-- duplicate point, so do nothing
 			else
 				returner[#returner+1] = point.x
@@ -923,36 +899,6 @@ function mfunc:sortpolydraworder(listofpoints)
 
 	return returner
 
-end
-
--- this function will calculate the midpoint between point 1 and 2
-function mfunc:perpendicularline(x1,y1,x2,y2)
-
-	local slope = -1*(x2-x1)/(y2-y1)
-	local midpoint = { x = (x2+x1)/2, y = (y2+y1)/2 }
-	local intercept = midpoint.y - (slope*midpoint.x)
-
-	local ix1 = 0
-	local iy1 = slope*ix1+intercept
-	local ix2 = windowsize.x
-	local iy2 = slope*ix2+intercept
-
-	return ix1,iy1,ix2,iy2
-end
-
--- this function will treat the 2nd point as the midpoint
-function mfunc:perpendicularline2(x1,y1,x2,y2)
-
-	local slope = -1*(x2-x1)/(y2-y1)
-	local midpoint = { x = x2, y = y2 }
-	local intercept = midpoint.y - (slope*midpoint.x)
-
-	local ix1 = 0
-	local iy1 = slope*ix1+intercept
-	local ix2 = windowsize.x
-	local iy2 = slope*ix2+intercept
-
-	return ix1,iy1,ix2,iy2
 end
 
 function mfunc:intersectionpoint(line1,line2)
@@ -998,7 +944,7 @@ function mfunc:issegmentintersect(line1,groupoflines)
 	for index,line2 in pairs(groupoflines) do
 		local ix,iy,onbothlines = self:intersectionpoint(line1,line2)
 
-		if ((math.abs(line1[1]-ix)+math.abs(line1[2]-iy))<mfunc.zerothreshold or (math.abs(line1[3]-ix)+math.abs(line1[4]-iy))<mfunc.zerothreshold) then 
+		if ((math.abs(line1[1]-ix)+math.abs(line1[2]-iy))<constants.zero or (math.abs(line1[3]-ix)+math.abs(line1[4]-iy))<constants.zero) then 
 			onbothlines = false
 		end
 
