@@ -1,8 +1,13 @@
-function love.load()
-
-	package.path = 'D:/Documents/Programming/voronoi/?.lua;' .. package.path
-	--package.path = './../../?.lua;' .. package.path
-
+function love.load( arg )
+	-------------------------------------------------------------------------------
+	-- this section here finds the current directory of the main.lua and moves the 
+	-- package.path to the root of the repo, so that it can use voronoi.lua
+	for i,v in pairs(arg) do 
+		if (v ~= '--console') and (v ~= 'embedded boot.lua') and (v:find('.exe') == nil ) then
+			package.path = v..'/../../?.lua' .. package.path
+		end
+	end
+	
 	require 'generator'
 	require 'voronoi'
 
