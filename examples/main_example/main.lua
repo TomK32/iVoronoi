@@ -4,7 +4,8 @@ function love.load( arg )
 	-- package.path to the root of the repo, so that it can use voronoi.lua
 	for i,v in pairs(arg) do 
 		if (v ~= '--console') and (v ~= 'embedded boot.lua') and (v:find('.exe') == nil ) then
-			package.path = v..'/../../?.lua' .. package.path
+			print(v)
+			package.path = v..'/../../?.lua;' .. package.path
 		end
 	end
 	
