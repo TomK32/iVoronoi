@@ -16,11 +16,20 @@ function love.load( arg )
 	framesize = { x=windowsize.x-50, y=windowsize.y-50 }
 	pointcount = 50
 
+
+	initalize()
+end
+
+function initalize()
 	genvoronoi = voronoi:new(pointcount,3,25,25,framesize.x,framesize.y)
 end
 
 function love.draw()
 	draw(genvoronoi)
+end
+
+function love.keypressed(key)
+	if key == "q" then initalize() end
 end
 
 --------------------------------------------------------------------------------------------------------------------
