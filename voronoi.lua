@@ -487,9 +487,8 @@ end
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------
-constants = { }
-
-constants.zero = 0.01
+voronoilib.constants = { }
+voronoilib.constants.zero = 0.01
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -561,7 +560,7 @@ function voronoilib.tools:sortpolydraworder(listofpoints)
 	unpacked = { }
 	for i,point in pairs(returner) do
 		if i > 1 then
-			if (math.abs(unpacked[#unpacked-1] - point.x) < constants.zero) and (math.abs(unpacked[#unpacked] - point.y) < constants.zero) then
+			if (math.abs(unpacked[#unpacked-1] - point.x) < voronoilib.constants.zero) and (math.abs(unpacked[#unpacked] - point.y) < voronoilib.constants.zero) then
 				-- duplicate point, so do nothing
 			else
 				unpacked[#unpacked+1] = point.x
@@ -691,7 +690,7 @@ function voronoilib.tools:sortpolydraworder(listofpoints)
 			returner[1] = point.x
 			returner[2] = point.y
 		else
-			if (math.abs(returner[#returner-1] - point.x) < constants.zero) and (math.abs(returner[#returner] - point.y) < constants.zero) then
+			if (math.abs(returner[#returner-1] - point.x) < voronoilib.constants.zero) and (math.abs(returner[#returner] - point.y) < voronoilib.constants.zero) then
 				-- duplicate point, so do nothing
 			else
 				returner[#returner+1] = point.x
@@ -749,7 +748,7 @@ function voronoilib.tools:issegmentintersect(line1,groupoflines)
 	for index,line2 in pairs(groupoflines) do
 		local ix,iy,onbothlines = self:intersectionpoint(line1,line2)
 
-		if ((math.abs(line1[1]-ix)+math.abs(line1[2]-iy))<constants.zero or (math.abs(line1[3]-ix)+math.abs(line1[4]-iy))<constants.zero) then 
+		if ((math.abs(line1[1]-ix)+math.abs(line1[2]-iy))<voronoilib.constants.zero or (math.abs(line1[3]-ix)+math.abs(line1[4]-iy))<voronoilib.constants.zero) then 
 			onbothlines = false
 		end
 
@@ -892,7 +891,7 @@ function voronoilib.tools:dirty_poly(invoronoi)
 
 		local mindistance = distances[1].d
 		local i = 1
-		while (distances[i].d - mindistance < constants.zero) do
+		while (distances[i].d - mindistance < voronoilib.constants.zero) do
 
 			if polygon[distances[i].i] == nil then
 
