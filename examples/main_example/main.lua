@@ -10,7 +10,7 @@ function love.load( arg )
 	end
 	
 	require 'generator'
-	require 'voronoi'
+	voronoi = require 'voronoi'
 
 	gen:initalize()
 end

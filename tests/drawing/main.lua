@@ -9,7 +9,7 @@ function love.load( arg )
 		end
 	end
 
-	require 'voronoi'
+	voronoi = require 'voronoi'
 
 	-----------------------
 
