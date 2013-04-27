@@ -10,7 +10,7 @@ function gen:initalize()
 	--math.randomseed(41493)
 	--print('seed used: ' .. seed)
 
-	gen.regions = voronoi:create(pointcount,3,25,25,framesize.x,framesize.y)
+	gen.regions = voronoi:new(pointcount,3,25,25,framesize.x,framesize.y)
 
 end
 

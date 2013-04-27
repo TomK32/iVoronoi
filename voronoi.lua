@@ -37,25 +37,25 @@ voronoi = { }
 --              the grid looks, recommend at least 3 iterations for a nice grid. any more is diminishing returns
 -- minx,miny,maxx,maxy = the boundary for the voronoi diagram. if you choose 0,0,100,100 the function will make a voronoi diagram inside 
 --                       the square defined by 0,0 and 100,100 where all the points of the voronoi are inside the square.
-function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
-	local returner = { }
+function voronoi:new(polygoncount,iterations,minx,miny,maxx,maxy) 
 
+	local rvoronoi = { }
 	----------------------------------------------------------
 	-- the iteration loop
 	for it=1,iterations do
 
 		------------------------------------------------
 		-- initalizes everything needed for this iteration
-		returner[it] = { }
-		returner[it].points = { }
-		returner[it].boundary = { minx,miny,minx+maxx,miny+maxy }
-		returner[it].vertex = { }
-		returner[it].segments = { }
-		returner[it].events = Heap:new()
-		returner[it].beachline = DoubleLinkedList:new()
-		returner[it].polygons = { }
-		returner[it].polygonmap = { }
-		returner[it].centroids = { }
+		rvoronoi[it] = { }
+		rvoronoi[it].points = { }
+		rvoronoi[it].boundary = { minx,miny,minx+maxx,miny+maxy }
+		rvoronoi[it].vertex = { }
+		rvoronoi[it].segments = { }
+		rvoronoi[it].events = Heap:new()
+		rvoronoi[it].beachline = DoubleLinkedList:new()
+		rvoronoi[it].polygons = { }
+		rvoronoi[it].polygonmap = { }
+		rvoronoi[it].centroids = { }
 
 		---------------------------------------------------------
 		-- creates the random points that the polygons will be based
@@ -67,43 +67,47 @@ function voronoi:create(polygoncount,iterations,minx,miny,maxx,maxy)
 			-- creates a random point and then checks to see if that point is already inside the set of random points. 
 			-- don't know what would happened but it would not return the same amount of polygons that user requested
 			for i=1,polygoncount do
-				local rx,ry = self:randompoint(returner[it].boundary)
-				while mfunc:tablecontains(returner[it].points,{ 'x', 'y' }, { rx, ry }) do
-					rx,ry = self:randompoint(returner[it].boundary)
+				local rx,ry = self:randompoint(rvoronoi[it].boundary)
+				while mfunc:tablecontains(rvoronoi[it].points,{ 'x', 'y' }, { rx, ry }) do
+					rx,ry = self:randompoint(rvoronoi[it].boundary)
 				end
-				returner[it].points[i] = { x = rx, y = ry }
+				rvoronoi[it].points[i] = { x = rx, y = ry }
 			end
-			returner[it].points = mfunc:sortthepoints(returner[it].points)
+			rvoronoi[it].points = mfunc:sortthepoints(rvoronoi[it].points)
 		else
-			returner[it].points = returner[it-1].centroids
+			rvoronoi[it].points = rvoronoi[it-1].centroids
 		end
 		
-		-- sets up the returner events
-		for i = 1,#returner[it].points do
-			returner[it].events:push(returner[it].points[i], returner[it].points[i].x,{i} )
+		-- sets up the rvoronoi events
+		for i = 1,#rvoronoi[it].points do
+			rvoronoi[it].events:push(rvoronoi[it].points[i], rvoronoi[it].points[i].x,{i} )
 		end
 		
-		while not returner[it].events:isEmpty() do
-			local e, x = returner[it].events:pop()
+		while not rvoronoi[it].events:isEmpty() do
+			local e, x = rvoronoi[it].events:pop()
 			if e.event then
-				self:processEvent(e,returner[it])
+				self:processEvent(e,rvoronoi[it])
 			else
-				self:processPoint(e,returner[it])
+				self:processPoint(e,rvoronoi[it])
 			end    
 		end
 		
-		self:finishEdges(returner[it])	 
+		self:finishEdges(rvoronoi[it])	 
 
-		self:dirty_poly(returner[it])
+		self:dirty_poly(rvoronoi[it])
 
-		for i,polygon in pairs(returner[it].polygons) do
+		for i,polygon in pairs(rvoronoi[it].polygons) do
 			local cx, cy = mfunc:polyoncentroid(polygon)
-			returner[it].centroids[i] = { x = cx, y = cy }
+			rvoronoi[it].centroids[i] = { x = cx, y = cy }
 		end
     end
+
     -----------------------------
     -- returns the last iteration
-    return returner[iterations]
+    local returner = rvoronoi[iterations]
+	setmetatable(returner, self) 
+	self.__index = self 
+    return returner
 end
 
 ---------------------------------------------
@@ -254,63 +258,6 @@ function voronoi:dirty_poly(invoronoi)
 		-- quick fix to stop crashing
 		if polygon[i] ~= nil then
 			invoronoi.polygons[i] = mfunc:sortpolydraworder(polygon[i])
-		end
-	end
-end
-
---------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------
--- draws the voronoi diagram, used for debugging and visualizing the diagram before using it for anything else.
---
--- ivoronoi = the input voronoi structure. this is expecting the returner[it] from the creation function, 
--- 			  should be the default output from voronoi:create()
-function voronoi:draw(ivoronoi)
-
-	-- draws the polygons
-	for index,polygon in pairs(ivoronoi.polygons) do
-		if #polygon >= 6 then
-			love.graphics.setColor(50,50,50)
-			love.graphics.polygon('fill',unpack(polygon))
-			love.graphics.setColor(255,255,255)
-			love.graphics.polygon('line',unpack(polygon))
-		end
-	end
-
-	-- draws the segments
-	--[[love.graphics.setColor(150,0,100)
-	for index,segment in pairs(ivoronoi.segments) do
-		love.graphics.line(segment.startPoint.x,segment.startPoint.y,segment.endPoint.x,segment.endPoint.y)
-	end]]--
-
-	-- draws the segment's vertices
-	--[[love.graphics.setColor(250,100,200)
-	love.graphics.setPointSize(5)
-	for index,vertex in pairs(ivoronoi.vertex) do
-		love.graphics.point(vertex.x,vertex.y)
-	end]]--
-
-	-- draw the points
-	love.graphics.setColor(255,255,255)
-	love.graphics.setPointSize(7)
-	for index,point in pairs(ivoronoi.points) do
-		love.graphics.point(point.x,point.y)
-		love.graphics.print(index,point.x,point.y)
-	end
-
-	-- draws the centroids
-	love.graphics.setColor(255,255,0)
-	love.graphics.setPointSize(5)
-	for index,point in pairs(ivoronoi.centroids) do
-		love.graphics.point(point.x,point.y)
-		love.graphics.print(index,point.x,point.y)
-	end
-
-	-- draws the relationship lines
-	love.graphics.setColor(0,255,0)
-	for pointindex,relationgroups in pairs(ivoronoi.polygonmap) do
-		for badindex,subpindex in pairs(relationgroups) do
-			love.graphics.line(ivoronoi.centroids[pointindex].x,ivoronoi.centroids[pointindex].y,ivoronoi.centroids[subpindex].x,ivoronoi.centroids[subpindex].y)
 		end
 	end
 end
