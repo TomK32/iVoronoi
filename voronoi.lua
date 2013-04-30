@@ -67,9 +67,9 @@ function voronoilib:new(polygoncount,iterations,minx,miny,maxx,maxy)
 			-- creates a random point and then checks to see if that point is already inside the set of random points. 
 			-- don't know what would happened but it would not return the same amount of polygons that user requested
 			for i=1,polygoncount do
-				local rx,ry = self:randompoint(rvoronoi[it].boundary)
+				local rx,ry = self.tools:randompoint(rvoronoi[it].boundary)
 				while self.tools:tablecontains(rvoronoi[it].points,{ 'x', 'y' }, { rx, ry }) do
-					rx,ry = self:randompoint(rvoronoi[it].boundary)
+					rx,ry = self.tools:randompoint(rvoronoi[it].boundary)
 				end
 				rvoronoi[it].points[i] = { x = rx, y = ry }
 			end
@@ -108,15 +108,6 @@ function voronoilib:new(polygoncount,iterations,minx,miny,maxx,maxy)
 	setmetatable(returner, self) 
 	self.__index = self 
     return returner
-end
-
----------------------------------------------
--- generates randompoints
-function voronoilib:randompoint(boundary)
-	local x = math.random(boundary[1]+1,boundary[3]-1) 
-	local y = math.random(boundary[2]+1,boundary[4]-1)
-
-	return x,y 
 end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -933,6 +924,15 @@ function voronoilib.tools:dirty_poly(invoronoi)
             invoronoi.polygons[i] = self.polygon:new(self:sortpolydraworder(polygon[i]))
 		end
 	end
+end
+
+---------------------------------------------
+-- generates randompoints
+function voronoilib.tools:randompoint(boundary)
+    local x = math.random(boundary[1]+1,boundary[3]-1) 
+    local y = math.random(boundary[2]+1,boundary[4]-1)
+
+    return x,y 
 end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------
