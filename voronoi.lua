@@ -110,6 +110,21 @@ function voronoilib:new(polygoncount,iterations,minx,miny,maxx,maxy)
     return returner
 end
 
+------------------------------------------------
+-- returns the actual polygons that are the neighbors
+function voronoilib:getNeighbors(polygonnumber)
+
+    local returner = { }
+
+    for i,index in pairs(self.polygonmap[polygonnumber]) do
+
+        returner[i] = self.polygons[index]
+    end
+
+    return returner
+
+end
+
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -921,7 +936,7 @@ function voronoilib.tools:dirty_poly(invoronoi)
 		-- quick fix to stop crashing
 		if polygon[i] ~= nil then
 			--invoronoi.polygons[i] = self:sortpolydraworder(polygon[i])
-            invoronoi.polygons[i] = self.polygon:new(self:sortpolydraworder(polygon[i]))
+            invoronoi.polygons[i] = self.polygon:new(self:sortpolydraworder(polygon[i]),i)
 		end
 	end
 end
@@ -940,9 +955,9 @@ end
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 voronoilib.tools.polygon = { }
 
-function voronoilib.tools.polygon:new(inpoints)
+function voronoilib.tools.polygon:new(inpoints,inindex)
 
-    local returner = { points = inpoints }
+    local returner = { points = inpoints, index = inindex }
     setmetatable(returner, self) 
     self.__index = self 
     return returner
