@@ -97,7 +97,7 @@ function voronoilib:new(polygoncount,iterations,minx,miny,maxx,maxy)
 		self.tools:dirty_poly(rvoronoi[it])
 
 		for i,polygon in pairs(rvoronoi[it].polygons) do
-			local cx, cy = self.tools:polyoncentroid(polygon)
+			local cx, cy = self.tools:polyoncentroid(polygon.points)
 			rvoronoi[it].centroids[i] = { x = cx, y = cy }
 		end
     end
@@ -929,9 +929,24 @@ function voronoilib.tools:dirty_poly(invoronoi)
 	for i=1,#invoronoi.points do 
 		-- quick fix to stop crashing
 		if polygon[i] ~= nil then
-			invoronoi.polygons[i] = self:sortpolydraworder(polygon[i])
+			--invoronoi.polygons[i] = self:sortpolydraworder(polygon[i])
+            invoronoi.polygons[i] = self.polygon:new(self:sortpolydraworder(polygon[i]))
 		end
 	end
+end
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+voronoilib.tools.polygon = { }
+
+function voronoilib.tools.polygon:new(inpoints)
+
+    local returner = { points = inpoints }
+    setmetatable(returner, self) 
+    self.__index = self 
+    return returner
+
 end
 
 

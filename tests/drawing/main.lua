@@ -43,11 +43,11 @@ function draw(ivoronoi)
 
 	-- draws the polygons
 	for index,polygon in pairs(ivoronoi.polygons) do
-		if #polygon >= 6 then
+		if #polygon.points >= 6 then
 			love.graphics.setColor(50,50,50)
-			love.graphics.polygon('fill',unpack(polygon))
+			love.graphics.polygon('fill',unpack(polygon.points))
 			love.graphics.setColor(255,255,255)
-			love.graphics.polygon('line',unpack(polygon))
+			love.graphics.polygon('line',unpack(polygon.points))
 		end
 	end
 
