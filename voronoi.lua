@@ -97,7 +97,7 @@ function voronoilib:new(polygoncount,iterations,minx,miny,maxx,maxy)
 		self.tools:dirty_poly(rvoronoi[it])
 
 		for i,polygon in pairs(rvoronoi[it].polygons) do
-			local cx, cy = self.tools:polyoncentroid(polygon)
+			local cx, cy = self.tools:polyoncentroid(polygon.points)
 			rvoronoi[it].centroids[i] = { x = cx, y = cy }
 		end
     end
@@ -110,17 +110,18 @@ function voronoilib:new(polygoncount,iterations,minx,miny,maxx,maxy)
     return returner
 end
 
------------------------------------------------------
--- gets the neighbor polygons of the indexed polygon
-function voronoilib:getNeighbors(polyindex)
+------------------------------------------------
+-- returns the actual polygons that are the neighbors
+function voronoilib:getNeighbors(polygonnumber)
 
-	local returner = { }
+    local returner = { }
 
-	for garbage,index in pairs(self.polygonmap[polyindex]) do
-		returner[garbage] = self.polygons[index]
-	end
+    for i,index in pairs(self.polygonmap[polygonnumber]) do
 
-	return returner
+        returner[i] = self.polygons[index]
+    end
+
+    return returner
 
 end
 
@@ -940,7 +941,7 @@ function voronoilib.tools:dirty_poly(invoronoi)
 	for i=1,#invoronoi.points do 
 		-- quick fix to stop crashing
 		if polygon[i] ~= nil then
-			invoronoi.polygons[i] = self.polygon:new(self:sortpolydraworder(polygon[i]),i)
+            invoronoi.polygons[i] = self.polygon:new(self:sortpolydraworder(polygon[i]),i)
 		end
 	end
 end
@@ -948,10 +949,12 @@ end
 ---------------------------------------------
 -- generates randompoints
 function voronoilib.tools:randompoint(boundary)
-	local x = math.random(boundary[1]+1,boundary[3]-1) 
-	local y = math.random(boundary[2]+1,boundary[4]-1)
 
-	return x,y 
+    local x = math.random(boundary[1]+1,boundary[3]-1) 
+    local y = math.random(boundary[2]+1,boundary[4]-1)
+
+    return x,y 
+
 end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -962,10 +965,10 @@ voronoilib.tools.polygon = { }
 
 function voronoilib.tools.polygon:new(inpoints,inindex)
 
-	local returner = { points = inpoints, index = inindex }
+    local returner = { points = inpoints, index = inindex }
 
-	setmetatable(returner, self) 
-	self.__index = self 
+    setmetatable(returner, self) 
+    self.__index = self 
 
     return returner
 
