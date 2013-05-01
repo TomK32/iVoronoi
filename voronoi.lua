@@ -169,7 +169,25 @@ function voronoilib:getEdges(...)
 
 end
 
+-----------------------------------------------------------------------------------
+-- returns the polygon that contains the point, returns nil if no polygon was found
+function voronoilib:polygoncontains(x,y)
 
+    local distance = { }
+    for index,centroid in pairs(self.centroids) do
+        distance[#distance+1] = { i = index, d = math.sqrt(math.pow(x-centroid.x,2) + math.pow(y-centroid.y,2)) }
+    end
+
+    table.sort(distance,function(a,b) return a.d < b.d end)
+
+    for i,pindex in pairs({ unpack(self.polygonmap[distance[1].i]),distance[1].i }) do
+        if self.polygons[pindex]:containspoint(x,y) then 
+            return self.polygons[pindex]
+        end
+    end
+
+    return nil
+end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------

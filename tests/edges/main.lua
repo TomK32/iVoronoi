@@ -60,18 +60,12 @@ end
 function love.mousepressed(x,y,button)
 
 	if button == 'l' then
-		local distance = { }
-		for index,centroids in pairs(genvoronoi.centroids) do
-			distance[#distance+1] = { i = index, d = math.sqrt(math.pow(x-centroids.x,2) + math.pow(y-centroids.y,2)) }
-		end
 
-		table.sort(distance,function(a,b) return a.d < b.d end)
-
-		for i,pindex in pairs({ unpack(genvoronoi.polygonmap[distance[1].i]),distance[1].i }) do
-			if genvoronoi.polygons[pindex]:containspoint(x,y) then 
-				if activated[pindex] == true then activated[pindex] = nil else activated[pindex] = true end
-			end
+		local polygon = genvoronoi:polygoncontains(x,y)
+		if polygon ~= nil then
+			if activated[polygon.index] == true then activated[polygon.index] = nil else activated[polygon.index] = true end
 		end
+		
 	end
 end
 
