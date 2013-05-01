@@ -14,45 +14,12 @@ The intent of this project is to have a simple to use Voronoi generator which al
 
 How to Use
 ----
-The lua code is currently scattered since it is under active development. There are many bugs and fine tuning that is required before a clean release is available. But to show how this works ....
+Included in the project are 'tests' which were used when developing the library to ensure the functions were performing as intended. These 'tests' can also be used to learn and understand the functionality available. The tests are also linked below in the functions folder (if they deal with a specific function. There are more tests available in the 'tests' folder)
 
-For the current 'working' build
-```lua
-    require 'constants'
-    require 'mathfuncs'
-    require 'voronoi'
-    require 'generator'
-```
-And to create a diagram, you need to call this anywhere you load resources.
-```lua
-    your_new_diagram = voronoi:create(pointcount,iterations,startx,starty,framesizex,framesizey)
-```
-And to access the pieces of the diagram you could do
-```lua
-    -- points used to generate the diagram
-    for index,point in pairs(your_new_diagram.points) do
-      point.x, point.y
-    end
-    
-    -- polygons
-    for index,polygon in pairs(your_new_diagram.polygons) do
-      unpack(polygon) -- just a table of points, no structure
-    end
-    
-    -- relationships (the green lines in the diagram above)
-    for index,neighborindexes in pairs(your_new_diagram.polygonmap) do
-      unpack(neighborindexes) -- just a table of indexes for neighboring polygons 
-    end
-```
-All indexes for all elements are the same. So say you want to look polygon #1 (the top left corner). You can find its neighbors by doing
-```lua
-    local neighbors = your_new_diagram.polygonmap[1]
-```
-Which would give you a table like below
-```lua
-    neighbors == { 17, 11, 10 } 
-```
-Which you could then use those indexes to access whatever data you need from the diagram, get its centroid, or is neighbors.
+Library Functions
+----
+[voronilib:getEdges(...)](test\voronoilib_getEdges\readme.md "the voronoi:getEdges(...) function")
+
 
 Sources / Credits
 ----
