@@ -16,10 +16,8 @@ function love.load( arg )
 	framesize = { x=windowsize.x-50, y=windowsize.y-50 }
 	pointcount = 50
 
-	drawme = { [1] = true }
 	drawlist = { }
-
-	activated = { [2] = true }
+	activated = { }
 
 	initalize()
 end
@@ -36,7 +34,7 @@ function love.draw()
 			love.graphics.polygon('fill',unpack(polygon.points))
 			love.graphics.setColor(100,100,100)
 			love.graphics.polygon('line',unpack(polygon.points))
-			if activated[index] then love.graphics.setColor(255,0,0) end
+			if activated[polygon.index] then love.graphics.setColor(255,0,0) end
 			love.graphics.print(polygon.index,polygon.centroid.x,polygon.centroid.y)
 		end
 	end
@@ -51,9 +49,7 @@ end
 function love.update()
 
 	drawlist = { }
-	for i,v in pairs(drawme) do
-		drawlist[#drawlist+1] = i 
-	end
+	for i,v in pairs(activated) do drawlist[#drawlist+1] = i end
 
 end
 
@@ -65,7 +61,7 @@ function love.mousepressed(x,y,button)
 		if polygon ~= nil then
 			if activated[polygon.index] == true then activated[polygon.index] = nil else activated[polygon.index] = true end
 		end
-		
+
 	end
 end
 
@@ -74,9 +70,5 @@ function love.keyreleased(key)
 end
 
 function love.keypressed(key,unicode)
-
-	if (unicode >= 49) and (unicode <= 57) then
-		if drawme[unicode-48] == true then drawme[unicode-48] = nil else drawme[unicode-48] = true end
-	end
 
 end

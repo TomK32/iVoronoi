@@ -135,13 +135,9 @@ function voronoilib:getEdges(...)
     local returner = { }
 
     for i=1, #arg do
-        for j=1, #self.polygons[arg[i]].points-2,2 do
-            local current = #returner+1
-            returner[current] = { }
-            returner[current][1] = self.polygons[arg[i]].points[j]
-            returner[current][2] = self.polygons[arg[i]].points[j+1]
-            returner[current][3] = self.polygons[arg[i]].points[j+2]
-            returner[current][4] = self.polygons[arg[i]].points[j+3]
+
+        for j,line in pairs(self.polygons[arg[i]].edges) do
+            returner[#returner+1] = line
         end
     end
 
@@ -159,7 +155,6 @@ function voronoilib:getEdges(...)
             end
         end
         for i,count in pairs(indexcounts) do
-            print(i,count)
             processedreturner[#processedreturner+1] = returner[i]
         end
         returner = processedreturner
@@ -1067,7 +1062,15 @@ function voronoilib.tools.polygon:new(inpoints,inindex)
         returner.edges[edgeno][3] = returner.points[i+2]
         returner.edges[edgeno][4] = returner.points[i+3]
     end
+    -- these last lines close the edges, without this the polygon would be missing an edge, usually on the top.
+    edgeno = edgeno + 1
+    returner.edges[edgeno] = { }
+    returner.edges[edgeno][1] = returner.edges[edgeno-1][3]
+    returner.edges[edgeno][2] = returner.edges[edgeno-1][4]
+    returner.edges[edgeno][3] = returner.edges[1][1]
+    returner.edges[edgeno][4] = returner.edges[1][2]
 
+    -- lua metatable stuff...
     setmetatable(returner, self) 
     self.__index = self 
 
