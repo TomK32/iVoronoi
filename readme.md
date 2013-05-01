@@ -18,7 +18,7 @@ Included in the project are 'tests' which were used when developing the library 
 
 Library Functions
 ----
-[voronilib:getEdges(...)](test/voronoilib_getEdges/readme.md "the voronoi:getEdges(...) function")
+[voronilib:getEdges(...)](tests/voronoilib_getEdges/ "the voronoi:getEdges(...) function")
 
 
 Sources / Credits
