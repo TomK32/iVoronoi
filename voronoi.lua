@@ -99,6 +99,7 @@ function voronoilib:new(polygoncount,iterations,minx,miny,maxx,maxy)
 		for i,polygon in pairs(rvoronoi[it].polygons) do
 			local cx, cy = self.tools:polyoncentroid(polygon.points)
 			rvoronoi[it].centroids[i] = { x = cx, y = cy }
+            rvoronoi[it].polygons[i].centroid = rvoronoi[it].centroids[i] -- creating a link between the two tables
 		end
     end
 
@@ -142,6 +143,26 @@ function voronoilib:getEdges(...)
             returner[current][3] = self.polygons[arg[i]].points[j+2]
             returner[current][4] = self.polygons[arg[i]].points[j+3]
         end
+    end
+
+
+    if #arg > 1 then
+        local processedreturner = { }
+        local indexcounts = { }
+
+        for i,line1 in pairs(returner) do
+            for j,line2 in pairs(returner) do
+                if (i ~= j) and self.tools:sameedge(line1,line2) then
+                    if indexcounts[i] == nil then indexcounts[i] = 1
+                    else indexcounts[i] = indexcounts[i]  + 1 end
+                end 
+            end
+        end
+        for i,count in pairs(indexcounts) do
+            print(i,count)
+            processedreturner[#processedreturner+1] = returner[i]
+        end
+        returner = processedreturner
     end
 
     return returner
@@ -976,6 +997,37 @@ function voronoilib.tools:randompoint(boundary)
 
 end
 
+----------------------------------------------
+-- checks if the line segment is the same
+function voronoilib.tools:sameedge(line1,line2)
+
+    local l1p1 = { x = line1[1], y = line1[2] }
+    local l1p2 = { x = line1[3], y = line1[4] }
+    local l2p1 = { x = line2[1], y = line2[2] }
+    local l2p2 = { x = line2[3], y = line2[4] }
+
+    local l1,l2 = { }, { }
+
+    if (l1p1.x == l1p2.x) then
+        if (l1p1.y < l1p2.y) then l1 = { l1p1.x,l1p1.y,l1p2.x,l1p2.y }
+        else l1 = { l1p2.x,l1p2.y,l1p1.x,l1p1.y } end
+    elseif (l1p1.x < l1p2.x) then l1 = { l1p1.x,l1p1.y,l1p2.x,l1p2.y  }
+    else l1 = { l1p2.x,l1p2.y,l1p1.x,l1p1.y } end
+
+    if (l2p1.x == l2p2.x) then
+        if (l2p1.y < l2p2.y) then l2 = { l2p1.x,l2p1.y,l2p2.x,l2p2.y }
+        else l2 = { l2p2.x,l2p2.y,l2p1.x,l2p1.y } end
+    elseif (l2p1.x < l2p2.x) then l2 = { l2p1.x,l2p1.y,l2p2.x,l2p2.y  }
+    else l2 = { l2p2.x,l2p2.y,l2p1.x,l2p1.y } end
+
+    if (math.abs(l1[1] - l2[1]) < voronoilib.constants.zero) and (math.abs(l1[2] - l2[2]) < voronoilib.constants.zero)
+    and (math.abs(l1[3] - l2[3]) < voronoilib.constants.zero) and (math.abs(l1[4] - l2[4]) < voronoilib.constants.zero) then
+        return true
+    end
+
+    return false
+end
+
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -986,11 +1038,37 @@ function voronoilib.tools.polygon:new(inpoints,inindex)
 
     local returner = { points = inpoints, index = inindex }
 
+    -- creates the edges
+    local edgeno = 0
+    returner.edges = { }
+    for i=1,#returner.points-2,2 do
+        edgeno = edgeno + 1
+        returner.edges[edgeno] = { }
+        returner.edges[edgeno][1] = returner.points[i]
+        returner.edges[edgeno][2] = returner.points[i+1]
+        returner.edges[edgeno][3] = returner.points[i+2]
+        returner.edges[edgeno][4] = returner.points[i+3]
+    end
+
     setmetatable(returner, self) 
     self.__index = self 
 
     return returner
 
+end
+
+----------------------------------------------------------
+-- checks if the point is inside the polygon
+function voronoilib.tools.polygon:containspoint(inx,iny)
+    local centroidline = { inx,iny, self.centroid.x, self.centroid.y }
+
+    -- checks the point,centroid line with the edges of the polygon. if the point intersects any of the edges and is one the edge, then the point lies outside of the polygon 
+    for i,line2 in pairs(self.edges) do
+        local x,y,onlines = voronoilib.tools:intersectionpoint(centroidline,line2)
+        if onlines then return false end
+    end
+
+    return true
 end
 
 return voronoilib
