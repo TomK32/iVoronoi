@@ -30,14 +30,19 @@ function love.draw()
 	for index,tt in pairs(drawthem) do
 		love.graphics.setColor(150,150,150)
 		love.graphics.polygon('fill',unpack(genvoronoi.polygons[index].points))
-		love.graphics.setColor(0,0,0)
-		love.graphics.polygon('line',unpack(genvoronoi.polygons[index].points))
 		
 		for i,polygon in pairs(genvoronoi:getNeighbors(index)) do
-			love.graphics.setColor(150,0,0)
+			love.graphics.setColor(255,0,0,100)
 			love.graphics.polygon('fill',unpack(polygon.points))
-			love.graphics.setColor(0,0,0)
+		end
+	end
+
+	for index,polygon in pairs(genvoronoi.polygons) do
+		if #polygon.points >= 6 then
+			love.graphics.setColor(50,50,50)
 			love.graphics.polygon('line',unpack(polygon.points))
+			love.graphics.setColor(50,50,50)
+			love.graphics.print(polygon.index,polygon.centroid.x,polygon.centroid.y)
 		end
 	end
 
@@ -49,14 +54,20 @@ end
 
 function love.keyreleased(key)
 
-	drawthem = { }
-
 end
 
 function love.keypressed(key,unicode)
 
-	if (unicode >= 49) and (unicode <= 57) then
-		drawthem[unicode-48] = true
-	end
+end
 
+function love.mousepressed(x,y,button)
+
+	if button == 'l' then
+
+		local polygon = genvoronoi:polygoncontains(x,y)
+		if polygon ~= nil then
+			if drawthem[polygon.index] == true then drawthem[polygon.index] = nil else drawthem[polygon.index] = true end
+		end
+
+	end
 end

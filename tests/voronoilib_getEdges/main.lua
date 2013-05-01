@@ -14,7 +14,7 @@ function love.load( arg )
 	-----------------------
 
 	framesize = { x=windowsize.x-50, y=windowsize.y-50 }
-	pointcount = 50
+	pointcount = 250
 
 	drawlist = { }
 	edgemode = 'segment'
