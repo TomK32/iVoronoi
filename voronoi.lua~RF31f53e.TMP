@@ -125,26 +125,8 @@ function voronoilib:getNeighbors(polygonnumber)
 
 end
 
--------------------------------------------------------
--- returns the edges of a polygon. if multiple polygons are 
--- inputed then only the edges that are shared with at least 
--- two polygons are returned
-function voronoilib:getEdges(...)
+function voronoilib:getEdges()
 
-    local returner = { }
-
-    for i=1, #arg do
-        for j=1, #self.polygons[arg[i]].points-2,2 do
-            local current = #returner+1
-            returner[current] = { }
-            returner[current][1] = self.polygons[arg[i]].points[j]
-            returner[current][2] = self.polygons[arg[i]].points[j+1]
-            returner[current][3] = self.polygons[arg[i]].points[j+2]
-            returner[current][4] = self.polygons[arg[i]].points[j+3]
-        end
-    end
-
-    return returner
 
 end
 
