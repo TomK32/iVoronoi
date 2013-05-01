@@ -17,6 +17,7 @@ function love.load( arg )
 	pointcount = 50
 
 	drawlist = { }
+	edgemode = 'segment'
 	activated = { }
 
 	initalize()
@@ -30,9 +31,9 @@ function love.draw()
 
 	for index,polygon in pairs(genvoronoi.polygons) do
 		if #polygon.points >= 6 then
-			love.graphics.setColor(25,25,25)
+			if activated[polygon.index] then love.graphics.setColor(0,100,0) else love.graphics.setColor(10,10,10) end
 			love.graphics.polygon('fill',unpack(polygon.points))
-			love.graphics.setColor(100,100,100)
+			love.graphics.setColor(50,50,50)
 			love.graphics.polygon('line',unpack(polygon.points))
 			if activated[polygon.index] then love.graphics.setColor(255,0,0) end
 			love.graphics.print(polygon.index,polygon.centroid.x,polygon.centroid.y)
@@ -40,10 +41,12 @@ function love.draw()
 	end
 
 	love.graphics.setColor(255,255,255)
-	for j,k in pairs(genvoronoi:getEdges(unpack(drawlist))) do
+	for j,k in pairs(genvoronoi:getEdges(edgemode,unpack(drawlist))) do
 		love.graphics.line(unpack(k))
 	end
 
+	love.graphics.setColor(255,255,255)
+	love.graphics.print('drawmode: '.. edgemode .. ' drawing ' .. #genvoronoi:getEdges(edgemode,unpack(drawlist)) .. ' segment(s)',5,5)
 end
 
 function love.update()
@@ -70,5 +73,8 @@ function love.keyreleased(key)
 end
 
 function love.keypressed(key,unicode)
+
+	if key == '1' then edgemode = 'segment' 
+	elseif key == '2' then edgemode = 'vertex' end
 
 end

@@ -130,38 +130,68 @@ end
 -- returns the edges of a polygon. if multiple polygons are 
 -- inputed then only the edges that are shared with at least 
 -- two polygons are returned
+-- the first argument is MODE = { 'segment' or 'vertex'} 
+-- segment --> returns edges where the line segment is shared with atleast 2 polygons
+-- vertex --> returns segments in which the vertexes are shared with atleast 3 polygons
 function voronoilib:getEdges(...)
 
     local returner = { }
+    local mode = arg[1] 
 
-    for i=1, #arg do
-
-        for j,line in pairs(self.polygons[arg[i]].edges) do
-            returner[#returner+1] = line
-        end
+    for i=2, #arg do
+        for j,line in pairs(self.polygons[arg[i]].edges) do returner[#returner+1] = line end
     end
 
+    
 
-    if #arg > 1 then
+    if #arg > 2 then
         local processedreturner = { }
-        local indexcounts = { }
+        local incount = { }
 
         for i,line1 in pairs(returner) do
             for j,line2 in pairs(returner) do
-                if (i ~= j) and self.tools:sameedge(line1,line2) then
-                    if indexcounts[i] == nil then indexcounts[i] = 1
-                    else indexcounts[i] = indexcounts[i]  + 1 end
+                if (i ~= j) and (incount[i] == nil) and (incount[j] == nil) then
+                    if self.tools:sameedge(line1,line2) then
+                        processedreturner[#processedreturner+1] = returner[i]
+                        incount[i],incount[j] = true,true
+                    end
                 end 
             end
         end
-        for i,count in pairs(indexcounts) do
-            processedreturner[#processedreturner+1] = returner[i]
-        end
         returner = processedreturner
+
+        if mode == 'segment' then
+            -- do nothing, everything is already done.
+        elseif mode == 'vertex' then
+            -- checks if the segment shares both points with 2 other segments
+            -- only returns those segments
+            processedreturner = { }
+            for indexmain,linemain in pairs(returner) do
+                -- how many other segments share the same points
+                local point1 = 0
+                local point2 = 0
+
+                for indexsub,linesub in pairs(returner) do
+                    if ((math.abs(linemain[1] - linesub[1]) < voronoilib.constants.zero) and (math.abs(linemain[2] - linesub[2]) < voronoilib.constants.zero)) 
+                    or ((math.abs(linemain[1] - linesub[3]) < voronoilib.constants.zero) and (math.abs(linemain[2] - linesub[4]) < voronoilib.constants.zero)) then
+                        point1 = point1 + 1
+                    elseif ((math.abs(linemain[3] - linesub[1]) < voronoilib.constants.zero) and (math.abs(linemain[4] - linesub[2]) < voronoilib.constants.zero)) 
+                    or ((math.abs(linemain[3] - linesub[3]) < voronoilib.constants.zero) and (math.abs(linemain[4] - linesub[4]) < voronoilib.constants.zero)) then 
+                        point2 = point2 + 1
+                    end
+                end
+
+                if (point2 >= 2) and (point1 >= 2) then
+                    processedreturner[#processedreturner+1] = linemain
+                end
+            end
+            returner = processedreturner
+
+        else print('not an recognized voronoilib:getEdges(...) mode') end
+
     end
 
     return returner
-
 end
 
 -----------------------------------------------------------------------------------
