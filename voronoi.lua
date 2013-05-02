@@ -113,14 +113,58 @@ end
 
 ------------------------------------------------
 -- returns the actual polygons that are the neighbors
-function voronoilib:getNeighbors(polygonnumber)
+function voronoilib:getNeighbors(...)
 
     local returner = { }
+    local indexes = { }
 
-    for i,index in pairs(self.polygonmap[polygonnumber]) do
-
-        returner[i] = self.polygons[index]
+    -- builds a table of it input polygons
+    for i=2,#arg do 
+        indexes[arg[i]] = true 
     end
+
+    if arg[1] == 'all' then
+
+        -- finds all the neighbors and removes all duplicates
+        local returnIs = { }
+        for pindex,tt in pairs(indexes) do
+            for j,index in pairs(self.polygonmap[pindex]) do
+                returnIs[index] = true
+            end
+        end
+
+        -- sets the in polygons as nil so it doesnt' return one of the inputs as a neighbor.
+        for index,tt in pairs(indexes) do returnIs[index] = nil end
+
+        -- builds the polygon table for returning
+        for index,tt in pairs(returnIs) do
+            returner[#returner+1] = self.polygons[index]
+        end
+
+    elseif arg[1] == 'shared' then
+
+        -- finds all the neighbors, counts occurances
+        local returnIs = { }
+        for pindex,tt in pairs(indexes) do
+            for j,index in pairs(self.polygonmap[pindex]) do
+                if returnIs[index] == nil then returnIs[index] = 1
+                else returnIs[index] = returnIs[index] + 1 end
+            end
+        end
+
+        -- builds the polygon table for returning
+        for index,count in pairs(returnIs) do
+            if count == (#arg-1) then returner[#returner+1] = self.polygons[index] end
+        end
+
+    else print('unknown mode in getNeighbors(...): ' .. arg[1]) end
+
+    --[[for pindex,tt in pairs(indexes) do
+        returner[]
+        for j,index in pairs(self.polygonmap[pindex]) do
+            returner[#returner+1] = self.polygons[index]
+        end
+    end]]--
 
     return returner
 

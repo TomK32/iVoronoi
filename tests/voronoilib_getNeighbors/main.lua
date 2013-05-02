@@ -18,7 +18,9 @@ function love.load( arg )
 
 
 	drawthem = { }
+	neighbormode = 'all'
 	initalize()
+	indexes = { }
 end
 
 function initalize()
@@ -30,11 +32,11 @@ function love.draw()
 	for index,tt in pairs(drawthem) do
 		love.graphics.setColor(150,150,150)
 		love.graphics.polygon('fill',unpack(genvoronoi.polygons[index].points))
-		
-		for i,polygon in pairs(genvoronoi:getNeighbors(index)) do
-			love.graphics.setColor(255,0,0,100)
-			love.graphics.polygon('fill',unpack(polygon.points))
-		end
+	end
+
+	for i,polygon in pairs(genvoronoi:getNeighbors(neighbormode,unpack(indexes))) do
+		love.graphics.setColor(255,0,0,100)
+		love.graphics.polygon('fill',unpack(polygon.points))
 	end
 
 	for index,polygon in pairs(genvoronoi.polygons) do
@@ -46,9 +48,15 @@ function love.draw()
 		end
 	end
 
+	love.graphics.setColor(255,255,255)
+	love.graphics.print('draw mode: ' .. neighbormode,5,5)
+
 end
 
 function love.update()
+
+	indexes = { }
+	for i,v in pairs(drawthem) do indexes[#indexes+1] = i end
 
 end
 
@@ -57,6 +65,8 @@ function love.keyreleased(key)
 end
 
 function love.keypressed(key,unicode)
+
+	if key == '1' then neighbormode = 'all' elseif key == '2' then neighbormode = 'shared' end
 
 end
 
