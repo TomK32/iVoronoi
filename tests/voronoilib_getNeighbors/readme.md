@@ -1,7 +1,9 @@
+[Home](../../ "Home")
+
 ## voronoilib:getNeighbors(...)
 
 ```lua
-   table neighborpolygons = voronoilib:getEdges(mode,polygon_index_1, polygon_index_2, polygon_index_3, ..., polygon_index_n)
+   table neighborpolygons = voronoilib:getEdges(mode,polygon_index_1, polygon_index_2, ..., polygon_index_n)
 
    neighborpolygons = { neighbor_polygon_1, neighbor_polygon_2, .... neighbor_polygon_n
 ```
