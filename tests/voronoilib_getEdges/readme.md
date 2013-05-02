@@ -1,3 +1,5 @@
+[Home](../../ "Home")
+
 ## voronoilib:getEdges(...)
 
 ```lua
