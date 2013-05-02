@@ -20,6 +20,8 @@ Library Functions
 ----
 [voronilib:getEdges(...)](tests/voronoilib_getEdges/ "the voronoi:getEdges(...) function")
 
+[voronilib:getNeighbors(...)](tests/voronoilib_getNeighbors/ "the voronoi:getNeighbors(...) function")
+
 
 Sources / Credits
 ----
