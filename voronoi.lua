@@ -264,7 +264,7 @@ end
 voronoilib.heap = { }
 
 function voronoilib.heap:new() 
-    o = { heap = { }, nodes = { } } 
+    local o = { heap = { }, nodes = { } } 
     setmetatable(o, self) 
     self.__index = self 
     return o
@@ -332,7 +332,7 @@ end
 voronoilib.doublelinkedlist = { }
 
 function voronoilib.doublelinkedlist:new()
-    o = { first = nil, last = nil } -- empty list head
+    local o = { first = nil, last = nil } -- empty list head
 
     setmetatable(o, self) 
     self.__index = self 
@@ -446,7 +446,7 @@ function voronoilib.tools:processPoint(point,ivoronoi)
     --Find the current arc(s) at height p.y (if there are any).
     for arc in ivoronoi.beachline.nextNode, ivoronoi.beachline do 
     	
-        z = (self:intersect(point,arc))
+        local z = (self:intersect(point,arc))
         if z then
             --New parabola intersects arc i.  If necessary, duplicate i.
             -- ie if there is a next node, but there is not interation, then creat a duplicate
@@ -462,8 +462,8 @@ function voronoilib.tools:processPoint(point,ivoronoi)
             ivoronoi.beachline:insertAfter(arc, point)
  
             
-            segment = {startPoint = {x = z.x, y = z.y}, endPoint = {x = 0, y = 0}, done = false, type = 2}
-            segment2 = {startPoint = {x = z.x, y = z.y}, endPoint = {x = 0, y = 0}, done = false, type = 2}
+            local segment = {startPoint = {x = z.x, y = z.y}, endPoint = {x = 0, y = 0}, done = false, type = 2}
+            local segment2 = {startPoint = {x = z.x, y = z.y}, endPoint = {x = 0, y = 0}, done = false, type = 2}
  
             -- debugging segment list!!!
             table.insert(ivoronoi.segments, segment)
@@ -559,7 +559,7 @@ function voronoilib.tools:intersect(point, arc)
     if (arc.x == point.x) then 
         return false 
     end
- 
+    local a, b = nil, nil
     if (arc.prev) then
         --Get the intersection of i->prev, i.
         a = self:intersection(arc.prev, arc, point.x).y
@@ -610,12 +610,12 @@ end
  
 function voronoilib.tools:finishEdges(ivoronoi)
     --Advance the sweep line so no parabolas can cross the bounding box.
-    l = ivoronoi.boundary[3] + (ivoronoi.boundary[3]-ivoronoi.boundary[1]) + (ivoronoi.boundary[4]-ivoronoi.boundary[2])
+    local l = ivoronoi.boundary[3] + (ivoronoi.boundary[3]-ivoronoi.boundary[1]) + (ivoronoi.boundary[4]-ivoronoi.boundary[2])
  
     --Extend each remaining segment to the new parabola intersections.
     for arc in ivoronoi.beachline.nextNode, ivoronoi.beachline do
         if arc.seg1 then
-            p = self:intersection(arc, arc.next, l*2)
+            local p = self:intersection(arc, arc.next, l*2)
             arc.seg1.endPoint = {x = p.x, y = p.y}
             arc.seg1.done = true
         end    
