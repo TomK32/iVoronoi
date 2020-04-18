@@ -30,25 +30,25 @@ end
 function love.draw()
 
 	for index,tt in pairs(drawthem) do
-		love.graphics.setColor(150,150,150)
+		love.graphics.setColor(0.6,0.6,0.6)
 		love.graphics.polygon('fill',unpack(genvoronoi.polygons[index].points))
 	end
 
 	for i,polygon in pairs(genvoronoi:getNeighbors(neighbormode,unpack(indexes))) do
-		love.graphics.setColor(255,0,0,100)
+		love.graphics.setColor(1,0,0,0.4)
 		love.graphics.polygon('fill',unpack(polygon.points))
 	end
 
 	for index,polygon in pairs(genvoronoi.polygons) do
 		if #polygon.points >= 6 then
-			love.graphics.setColor(50,50,50)
+			love.graphics.setColor(0.2,0.2,0.2)
 			love.graphics.polygon('line',unpack(polygon.points))
-			love.graphics.setColor(50,50,50)
+			love.graphics.setColor(0.2,0.2,0.2)
 			love.graphics.print(polygon.index,polygon.centroid.x,polygon.centroid.y)
 		end
 	end
 
-	love.graphics.setColor(255,255,255)
+	love.graphics.setColor(1,1,1)
 	love.graphics.print('draw mode: ' .. neighbormode,5,5)
 
 end
@@ -72,7 +72,7 @@ end
 
 function love.mousepressed(x,y,button)
 
-	if button == 'l' then
+	if button == 1 then
 
 		local polygon = genvoronoi:polygoncontains(x,y)
 		if polygon ~= nil then
