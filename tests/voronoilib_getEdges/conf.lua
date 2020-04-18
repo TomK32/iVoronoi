@@ -1,7 +1,7 @@
 function love.conf(t)
 
-    t.screen.width = 1000
-    t.screen.height = 600
+    t.window.width = 1000
+    t.window.height = 600
 
     t.title = "Voronoi Test App"
     t.author = "Domagoj Jursic"
@@ -10,6 +10,6 @@ function love.conf(t)
     t.console = true
 
     -- this is the default window size
-    windowsize = {}; windowsize.x = t.screen.width; windowsize.y = t.screen.height;
+    windowsize = {}; windowsize.x = t.window.width; windowsize.y = t.window.height;
     
 end

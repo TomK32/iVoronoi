@@ -44,44 +44,44 @@ function draw(ivoronoi)
 	-- draws the polygons
 	for index,polygon in pairs(ivoronoi.polygons) do
 		if #polygon.points >= 6 then
-			love.graphics.setColor(50,50,50)
+			love.graphics.setColor(0.2,0.2,0.2)
 			love.graphics.polygon('fill',unpack(polygon.points))
-			love.graphics.setColor(255,255,255)
+			love.graphics.setColor(1,1,1)
 			love.graphics.polygon('line',unpack(polygon.points))
 		end
 	end
 
 	-- draws the segments
-	--[[love.graphics.setColor(150,0,100)
+	--[[love.graphics.setColor(0.6,0,0.4)
 	for index,segment in pairs(ivoronoi.segments) do
 		love.graphics.line(segment.startPoint.x,segment.startPoint.y,segment.endPoint.x,segment.endPoint.y)
 	end]]--
 
 	-- draws the segment's vertices
-	--[[love.graphics.setColor(250,100,200)
+	--[[love.graphics.setColor(0.9,0.4,0.8)
 	love.graphics.setPointSize(5)
 	for index,vertex in pairs(ivoronoi.vertex) do
-		love.graphics.point(vertex.x,vertex.y)
+		love.graphics.points(vertex.x,vertex.y)
 	end]]--
 
 	-- draw the points
-	love.graphics.setColor(255,255,255)
+	love.graphics.setColor(1,1,1)
 	love.graphics.setPointSize(7)
 	for index,point in pairs(ivoronoi.points) do
-		love.graphics.point(point.x,point.y)
+		love.graphics.points(point.x,point.y)
 		love.graphics.print(index,point.x,point.y)
 	end
 
 	-- draws the centroids
-	love.graphics.setColor(255,255,0)
+	love.graphics.setColor(1,1,0)
 	love.graphics.setPointSize(5)
 	for index,point in pairs(ivoronoi.centroids) do
-		love.graphics.point(point.x,point.y)
+		love.graphics.points(point.x,point.y)
 		love.graphics.print(index,point.x,point.y)
 	end
 
 	-- draws the relationship lines
-	love.graphics.setColor(0,255,0)
+	love.graphics.setColor(0,1,0)
 	for pointindex,relationgroups in pairs(ivoronoi.polygonmap) do
 		for badindex,subpindex in pairs(relationgroups) do
 			love.graphics.line(ivoronoi.centroids[pointindex].x,ivoronoi.centroids[pointindex].y,ivoronoi.centroids[subpindex].x,ivoronoi.centroids[subpindex].y)
